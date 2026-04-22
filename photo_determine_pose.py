@@ -7,8 +7,8 @@ import config
 marker_length = config.detected_marker_size_mm / 1000  # metry
 
 # --- Wczytaj kalibrację ---
-camera_matrix = np.load("camera_matrix.npy")
-dist_coeffs = np.load("dist_coeffs.npy")
+camera_matrix = np.load(f"stored_calibrations/{config.current_camera}/camera_matrix.npy")
+dist_coeffs = np.load(f"stored_calibrations/{config.current_camera}/dist_coeffs.npy")
 
 # --- Słownik ---
 aruco_dict = cv2.aruco.getPredefinedDictionary(config.ARUCO_DICT)

@@ -7,4 +7,7 @@ markerLength = 0.026   # metry
 
 detected_marker_size_mm = 50
 
+current_camera = "s21"
+# current_camera = "webcam"
+
 ARUCO_DICT = cv2.aruco.DICT_6X6_250
