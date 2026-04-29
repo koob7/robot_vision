@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import time
+from scipy.spatial.transform import Rotation as Rot
 
 import config
 
@@ -18,7 +19,6 @@ elif config.current_camera == "trust_hd720p":
     camera_source = 1  # indeks kamery Trust HD720p
 
 base_marker_id = 53  # ID markera bazowego (ten, względem którego mierzymy)
-
 
 def rot_z(theta):
     return np.array([
@@ -162,13 +162,8 @@ while True:
             )
 
 
-            # --- stabilizacja numeryczna (ważne!) ---
-            def clamp(x, min_val=-1.0, max_val=1.0):
-                return max(min_val, min(max_val, x))
 
             # --- wyciąganie kątów ---
-            # theta_y = math.asin(clamp(-R[2, 0]))      # obrót wokół osi Y (zielona)
-            # theta_z = math.atan2(R[1, 0], R[0, 0])     # obrót wokół osi Z (niebieska)
             theta_y = np.arctan2(R[0,2], R[2,2])
             theta_z = np.arctan2(R[1,0], R[1,1])
 
@@ -177,11 +172,14 @@ while True:
             theta_y_deg = np.degrees(theta_y)
             theta_z_deg = np.degrees(theta_z)
 
+            r = Rot.from_matrix(R)
+            angles = r.as_euler('zyx', degrees=True)
+
             # --- linie tekstu ---
             lines = [
                 f"ID {ids[i][0]}",
                 f"X={tvec[0][0]:.3f} Y={tvec[0][1]:.3f} Z={tvec[0][2]:.3f} m",
-                f"rot Y {theta_y_deg:.1f}, rot Z {theta_z_deg:.1f} deg"
+                f"rot X {angles[2]:.1f}, rot Y {angles[1]:.1f}, rot Z {angles[0]:.1f} deg"
             ]
 
             corner = corners[i][0][0].astype(int)
@@ -201,6 +199,7 @@ while True:
     # --- Podgląd (skalowanie) ---
     scale = 1.0
     resized = cv2.resize(frame, None, fx=scale, fy=scale)
+
     cv2.imshow("Live pose estimation", resized)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
