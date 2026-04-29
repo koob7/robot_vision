@@ -27,7 +27,7 @@ def draw_camera_axes_ui(img):
 
     x_end = (origin[0] + 60, origin[1])      # prawo
     y_end = (origin[0], origin[1] - 60)      # góra
-    z_end = (origin[0] + 40, origin[1] - 40) # pseudo Z (ukośnie)
+    z_end = (origin[0] - 40, origin[1] + 40) # pseudo Z (ukośnie)
 
     cv2.arrowedLine(img, origin, x_end, (0, 0, 255), 3)   # X red
     cv2.arrowedLine(img, origin, y_end, (0, 255, 0), 3)   # Y green
@@ -181,23 +181,28 @@ while True:
 
 
 
-            # --- wyciąganie kątów ---
-            theta_y = np.arctan2(R[0,2], R[2,2])
-            theta_z = np.arctan2(R[1,0], R[1,1])
+            # # --- wyciąganie kątów ---
+            # theta_x = np.arctan2(R[2,1], R[1,1])
+            # theta_y = np.arctan2(R[0,2], R[0,0])
+            # # cos_z = np.sqrt(1 - R[0,1]**2)
+            # # theta_z = np.arctan2(-R[0,2], cos_z)
+            # theta_z = np.arcsin(-R[0,1])
 
 
-            # konwersja na stopnie (czytelniejsze)
-            theta_y_deg = np.degrees(theta_y)
-            theta_z_deg = np.degrees(theta_z)
+            # # konwersja na stopnie (czytelniejsze)
+            # theta_y_deg = np.degrees(theta_y)
+            # theta_z_deg = np.degrees(theta_z)
+            # theta_x_deg = np.degrees(theta_x)
 
             r = Rot.from_matrix(R)
-            angles = r.as_euler('zyx', degrees=True)
+            angles = r.as_euler('xzy', degrees=True)
 
             # --- linie tekstu ---
             lines = [
                 f"ID {ids[i][0]}",
                 f"X={tvec[0][0]:.3f} Y={tvec[0][1]:.3f} Z={tvec[0][2]:.3f} m",
-                f"rot X {angles[2]:.1f}, rot Y {angles[1]:.1f}, rot Z {angles[0]:.1f} deg"
+                f"rot X {angles[1]:.1f}, rot Y {angles[2]:.1f}, rot Z {angles[0]:.1f} deg",
+                # f"rot X {theta_x_deg:.1f} deg, rot Y {theta_y_deg:.1f} deg, rot Z {theta_z_deg:.1f} deg"
             ]
 
             corner = corners[i][0][0].astype(int)
