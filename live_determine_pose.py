@@ -20,6 +20,23 @@ elif config.current_camera == "trust_hd720p":
 
 base_marker_id = 53  # ID markera bazowego (ten, względem którego mierzymy)
 
+def draw_camera_axes_ui(img):
+    h, w = img.shape[:2]
+
+    origin = (60, h - 60)
+
+    x_end = (origin[0] + 60, origin[1])      # prawo
+    y_end = (origin[0], origin[1] - 60)      # góra
+    z_end = (origin[0] + 40, origin[1] - 40) # pseudo Z (ukośnie)
+
+    cv2.arrowedLine(img, origin, x_end, (0, 0, 255), 3)   # X red
+    cv2.arrowedLine(img, origin, y_end, (0, 255, 0), 3)   # Y green
+    cv2.arrowedLine(img, origin, z_end, (255, 0, 0), 3)   # Z blue
+
+    cv2.putText(img, "X", x_end, cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,0,255), 2)
+    cv2.putText(img, "Y", y_end, cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+    cv2.putText(img, "Z", z_end, cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,0,0), 2)
+
 def rot_z(theta):
     return np.array([
         [np.cos(theta), -np.sin(theta), 0],
@@ -112,6 +129,7 @@ rvec = rvecs[base_i[0]]
 home_tvec = tvecs[base_i[0]]
 R, _ = cv2.Rodrigues(rvec)
 home_R = get_default_correction(base_marker_id, R)
+home_rvec, _ = cv2.Rodrigues(home_R)
 
 while True:
     ret, frame = cap.read()
@@ -197,9 +215,11 @@ while True:
                 )
 
     # --- Podgląd (skalowanie) ---
+
+    draw_camera_axes_ui(frame)
+
     scale = 1.0
     resized = cv2.resize(frame, None, fx=scale, fy=scale)
-
     cv2.imshow("Live pose estimation", resized)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
