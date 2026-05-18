@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import numpy as np
 import glob
@@ -30,7 +32,8 @@ all_charuco_ids = []
 image_size = None
 
 # --- Wczytaj zdjęcia ---
-images = glob.glob(f"calib_images_8x5x35/{config.current_camera}/*.jpg")
+images = glob.glob(f"calib_images_8x5x35/{config.current_camera}/*.png") + \
+          glob.glob(f"calib_images_8x5x35/{config.current_camera}/*.jpg")
 
 for fname in images:
     img = cv2.imread(fname)
@@ -82,5 +85,8 @@ print("Macierz kamery:\n", camera_matrix)
 print("Współczynniki dystorsji:\n", dist_coeffs)
 
 # --- Zapis ---
+if not os.path.exists(f"stored_calibrations/{config.current_camera}"):
+    os.makedirs(f"stored_calibrations/{config.current_camera}")
+
 np.save(f"stored_calibrations/{config.current_camera}/camera_matrix.npy", camera_matrix)
 np.save(f"stored_calibrations/{config.current_camera}/dist_coeffs.npy", dist_coeffs)

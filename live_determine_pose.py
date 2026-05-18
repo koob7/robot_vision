@@ -24,8 +24,15 @@ elif config.current_camera == "creative":
 elif config.current_camera == "mx_brio":
     camera_source = 0  # indeks kamery MX Brio
 
-# base_marker_id = 53  # ID markera bazowego (ten, względem którego mierzymy)
-base_marker_id = 54  # ID markera bazowego (ten, względem którego mierzymy)
+elif config.current_camera == "mx_brio_2":
+    camera_source = 0  # indeks kamery MX Brio //480 x 640
+
+elif config.current_camera == "mx_brio_3":
+    camera_source = 0  # indeks kamery MX Brio //960 x 1280
+
+# base_marker_id = 53  # ID czarne 6x6 ramka 5
+base_marker_id = 54  # białe 6x6 ramka 5
+# base_marker_id = 55 # białe 4x4 ramka 10
 
 def draw_camera_axes_ui(img):
     h, w = img.shape[:2]
@@ -69,12 +76,9 @@ def get_default_correction(qr_id, R):
     R_corr = corrections.get(qr_id, np.eye(3))
     return  R @ R_corr
 
-def move_to_base(home_tvec, tvec):
-    return  tvec - home_tvec
-
-def rotate_to_base(home_R, R):
-    # return  home_R.T @ R // ta kolejność decyduje o kierunku obrotu ale wartości są takie same
-    return  R @ home_R.T
+def rotate_to_base(home_T, global_T):
+    # return  home_T.T @ global_T # ta kolejność decyduje o kierunku obrotu ale wartości są takie same
+    return  global_T @ home_T.T
 
 
 corrections = {
@@ -93,11 +97,34 @@ detector = cv2.aruco.ArucoDetector(aruco_dict)
 
 # --- Otwórz kamerę ---
 cap = cv2.VideoCapture(camera_source)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
+# cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+cap.set(cv2.CAP_PROP_FOCUS, 30)  
 # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # manual (zależne od kamery)
 # cap.set(cv2.CAP_PROP_EXPOSURE, -4)
 # cap.set(cv2.CAP_PROP_GAIN, 0)
+
+# --- ekspozycja manual ---
+# cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 2) # auto mode
+cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # manual mode
+cap.set(cv2.CAP_PROP_EXPOSURE, -8) # krótszy czas naświetlania bardzo poprawił skoki w odczytywanej pozycji
+
+# --- ISO / gain ---
+cap.set(cv2.CAP_PROP_GAIN, 80) # 0 = 100iso,  255 = 1600iso
+
+# --- obraz ---
+cap.set(cv2.CAP_PROP_BRIGHTNESS, 150)
+cap.set(cv2.CAP_PROP_CONTRAST, 150)
+cap.set(cv2.CAP_PROP_SATURATION, 0)
+cap.set(cv2.CAP_PROP_SHARPNESS, 100)
+
+cap.set(cv2.CAP_PROP_BACKLIGHT, 0)
+
+# --- latency ---
+cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+
 
 if not cap.isOpened():
     raise RuntimeError("Nie można otworzyć kamery. Sprawdź camera_source.")
@@ -105,14 +132,14 @@ if not cap.isOpened():
 print("Uruchomiono podgląd na żywo. Naciśnij 'q', aby zakończyć.")
 
 
-if config.current_camera == "s21_win":
-    ret, frame = cap.read()
-    time.sleep(3)  # krótka pauza, żeby kamera się ustabilizowała
+# if config.current_camera == "s21_win":
+#     ret, frame = cap.read()
+#     time.sleep(3)  # krótka pauza, żeby kamera się ustabilizowała
 
 #wyznaczenie markera bazowego
 
-
-ret, frame = cap.read()
+for i in range (30):
+    ret, frame = cap.read()
 
 # h, w = frame.shape[:2]
 
@@ -135,7 +162,7 @@ if not ret:
 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 print({frame.shape})
 
-inv = cv2.bitwise_not(gray)
+inv = cv2.bitwise_not(frame)
 
 # --- Detekcja markerów ---
 corners, ids, _ = detector.detectMarkers(inv)
@@ -160,10 +187,13 @@ rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
 )
 
 rvec = rvecs[base_i[0]]
-home_tvec = tvecs[base_i[0]]
+tvec = tvecs[base_i[0]]
 R, _ = cv2.Rodrigues(rvec)
-home_R = get_default_correction(base_marker_id, R)
-home_rvec, _ = cv2.Rodrigues(home_R)
+
+# R = get_default_correction(base_marker_id, R)
+home_T = np.eye(4)
+home_T[:3,:3] = R
+home_T[:3, 3] = tvec.flatten()
 
 while True:
     ret, frame = cap.read()
@@ -178,7 +208,7 @@ while True:
     # gray = clahe.apply(gray)
     # gray = cv2.GaussianBlur(gray, (5,5), 0)
 
-    inv = cv2.bitwise_not(gray)
+    inv = cv2.bitwise_not(frame)
     # cv2.imshow("inv", inv)
 
     # --- Detekcja markerów ---
@@ -204,21 +234,25 @@ while True:
             qr_id = ids[i][0]
 
             global_R, _ = cv2.Rodrigues(global_rvec)
+            global_T = np.eye(4)
+            global_T[:3,:3] = global_R
+            global_T[:3, 3] = global_tvec.flatten()
 
-            default_R = get_default_correction(qr_id, global_R)
+            # robot_T = rotate_to_base(home_T, global_T)
+            robot_T = np.linalg.inv(home_T) @ global_T
+            # robot_T = global_T
 
+            robot_R = robot_T[:3,:3]
+            robot_tvec = robot_T[:3, 3]
+            robot_rvec, _ = cv2.Rodrigues(robot_R)
 
-            # R = rotate_to_base(home_R, default_R)
-            R = default_R
-            rvec, _ = cv2.Rodrigues(default_R) 
+            R = robot_R
 
-            tvec = move_to_base(home_tvec, global_tvec )
-            # tvec = global_tvec
             cv2.drawFrameAxes(
                 frame,
                 camera_matrix,
                 dist_coeffs,
-                rvec,
+                robot_rvec,
                 global_tvec,
                 0.03,  # długość osi (metry)
             )
@@ -248,7 +282,7 @@ while True:
             # --- linie tekstu ---
             lines = [
                 f"ID {ids[i][0]}",
-                f"X={tvec[0][0]:.3f} Y={tvec[0][1]:.3f} Z={tvec[0][2]:.3f} m",
+                f"X={robot_tvec[0]:.3f} Y={robot_tvec[1]:.3f} Z={robot_tvec[2]:.3f} m",
                 f"rot angles X {angles[0]:.1f}, rot Y {angles[1]:.1f}, rot Z {angles[2]:.1f} deg",
                 # f"rot angles2 X {angles2[0]:.1f}, rot Y {angles2[1]:.1f}, rot Z {angles2[2]:.1f} deg",
                 f"rot manual Y {theta_y_deg:.1f}, rot Z {theta_z_deg:.1f} deg"
@@ -262,9 +296,11 @@ while True:
                 cv2.putText(
                     frame,
                     line,
-                    (corner[0], max(corner[1] - 10 - j * 50, 0)),
+                    # (corner[0], max(corner[1] - 10 - j * 50, 0)),
+                    (corner[0], max(corner[1] - 5 - j * 10, 0)),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    2.0,
+                    # 2.0,
+                    0.3,
                     (0, 0, 255),
                     1,
                     cv2.LINE_AA,
@@ -273,7 +309,8 @@ while True:
     # --- Podgląd (skalowanie) ---
     draw_camera_axes_ui(frame)
 
-    scale = 0.4
+    # scale = 0.4
+    scale = 1.0
     resized = cv2.resize(frame, None, fx=scale, fy=scale)
     cv2.imshow("Live pose estimation", resized)
 
