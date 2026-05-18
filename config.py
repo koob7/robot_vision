@@ -9,6 +9,8 @@ detected_marker_size_mm = 40
 
 # current_camera = "s21"
 # current_camera = "s21_win"
-current_camera = "trust_hd720p"
+# current_camera = "trust_hd720p"
+# current_camera = "creative"
+current_camera = "mx_brio"
 
 ARUCO_DICT = cv2.aruco.DICT_6X6_250

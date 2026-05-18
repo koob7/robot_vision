@@ -40,6 +40,7 @@ board = cv2.aruco.CharucoBoard(
 )
 
 img = board.generateImage((width_px, height_px))
+img = 255 - img  # odwrócenie kolorów (czarne na białe)
 
 pil_img = Image.fromarray(img)
 
