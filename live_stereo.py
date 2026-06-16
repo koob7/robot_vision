@@ -53,6 +53,12 @@ detector = aruco.ArucoDetector(aruco_dict, aruco_params)
 cap1 = cv2.VideoCapture(left_index)
 cap2 = cv2.VideoCapture(right_index)
 
+cap1.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+cap1.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+cap2.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+cap2.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+
+
 # =========================
 # PĘTLA
 # =========================
@@ -65,11 +71,39 @@ while True:
     if not ret1 or not ret2:
         break
 
-    gray1 = cv2.bitwise_not(frame1)
-    gray2 = cv2.bitwise_not(frame2)
+    gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+    gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
 
-    corners1, ids1, _ = detector.detectMarkers(gray1)
-    corners2, ids2, _ = detector.detectMarkers(gray2)
+    gray1_inv = cv2.bitwise_not(gray1)
+    gray2_inv = cv2.bitwise_not(gray2)
+
+    corners1, ids1, _ = detector.detectMarkers(gray1_inv)
+    corners2, ids2, _ = detector.detectMarkers(gray2_inv)
+
+    criteria = (
+        cv2.TERM_CRITERIA_EPS +
+        cv2.TERM_CRITERIA_MAX_ITER,
+        30,
+        0.001
+    )
+
+    for c in corners1:
+        cv2.cornerSubPix(
+            gray1_inv,
+            c,
+            (5,5),
+            (-1,-1),
+            criteria
+        )
+
+    for c in corners2:
+        cv2.cornerSubPix(
+            gray2_inv,
+            c,
+            (5,5),
+            (-1,-1),
+            criteria
+        )
 
     if ids1 is not None and ids2 is not None:
 

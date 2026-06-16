@@ -68,6 +68,11 @@ def collect_stereo_pairs(left_index, right_index, board, output_dir, min_corners
     cap_left = cv2.VideoCapture(left_index)
     cap_right = cv2.VideoCapture(right_index)
 
+    cap_left.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap_left.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+    cap_right.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
+    cap_right.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+
 
     if not cap_left.isOpened() or not cap_right.isOpened():
         cap_left.release()

@@ -6,7 +6,7 @@ squareLength = 0.035   # metry
 markerLength = 0.026   # metry
 
 # detected_marker_size_mm = 30
-detected_marker_size_mm = 40
+detected_marker_size_mm = 50
 
 # current_camera = "s21"
 # current_camera = "s21_win"

@@ -28,7 +28,7 @@ elif config.current_camera == "mx_brio_2":
     camera_source = 0  # indeks kamery MX Brio //480 x 640
 
 elif config.current_camera == "mx_brio_3":
-    camera_source = 2  # indeks kamery MX Brio //960 x 1280
+    camera_source = 0  # indeks kamery MX Brio //960 x 1280
 
 # base_marker_id = 53  # ID czarne 6x6 ramka 5
 base_marker_id = 54  # białe 6x6 ramka 5

@@ -17,7 +17,7 @@ marker_id = args.marker_id
 
 # --- PARAMETRY ---
 marker_size_mm = config.detected_marker_size_mm
-margin_mm = 5
+margin_mm = 15
 border_mm = 5
 marker_space_mm = 5
 pdf_border_mm = 10  # poprawiona nazwa
@@ -39,7 +39,7 @@ size_px = int(marker_size_m * inch_per_meter * dpi)
 # --- PDF ---
 pdf_file = f"aruco_markers/aruco_marker_grid_{marker_id}_{marker_size_mm}mm.pdf"
 
-cols = 3
+cols = 2
 rows = 4
 per_page = cols * rows
 
