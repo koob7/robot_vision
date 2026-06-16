@@ -1,22 +1,27 @@
 import cv2
 import cv2.aruco as aruco
 import numpy as np
+import time
+
+import config
 
 # =========================
 # PARAMETRY
 # =========================
 
-MARKER_SIZE = 0.04
+MARKER_SIZE = config.detected_marker_size_mm / 1000  # metry
 
 # =========================
 # KALIBRACJA
 # =========================
 
-camera_matrix_1 = np.load("stored_calibrations/mx_brio/camera_matrix.npy")
-dist_coeffs_1 = np.load("stored_calibrations/mx_brio/dist_coeffs.npy")
+camera_matrix_right = np.load("stored_calibrations/mx_brio/camera_matrix.npy")#right
+dist_coeffs_right = np.load("stored_calibrations/mx_brio/dist_coeffs.npy")
+right_index = 0
 
-camera_matrix_2 = np.load("stored_calibrations/creative/camera_matrix.npy")
-dist_coeffs_2 = np.load("stored_calibrations/creative/dist_coeffs.npy")
+camera_matrix_left = np.load("stored_calibrations/mx_brio2/camera_matrix.npy")#left
+dist_coeffs_left = np.load("stored_calibrations/mx_brio2/dist_coeffs.npy")
+left_index = 2
 
 # Stereo extrinsics
 R = np.load("stored_calibrations/stereo/R.npy")
@@ -27,16 +32,16 @@ T = np.load("stored_calibrations/stereo/T.npy")
 # =========================
 
 P1 = np.hstack((np.eye(3), np.zeros((3, 1))))
-P1 = camera_matrix_1 @ P1
+P1 = camera_matrix_left @ P1
 
 P2 = np.hstack((R, T))
-P2 = camera_matrix_2 @ P2
+P2 = camera_matrix_right @ P2
 
 # =========================
 # ARUCO
 # =========================
 
-aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
+aruco_dict = aruco.getPredefinedDictionary(config.ARUCO_DICT)
 aruco_params = aruco.DetectorParameters()
 
 detector = aruco.ArucoDetector(aruco_dict, aruco_params)
@@ -45,8 +50,8 @@ detector = aruco.ArucoDetector(aruco_dict, aruco_params)
 # KAMERY
 # =========================
 
-cap1 = cv2.VideoCapture(0)
-cap2 = cv2.VideoCapture(1)
+cap1 = cv2.VideoCapture(left_index)
+cap2 = cv2.VideoCapture(right_index)
 
 # =========================
 # PĘTLA
@@ -60,8 +65,8 @@ while True:
     if not ret1 or not ret2:
         break
 
-    gray1 = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
-    gray2 = cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
+    gray1 = cv2.bitwise_not(frame1)
+    gray2 = cv2.bitwise_not(frame2)
 
     corners1, ids1, _ = detector.detectMarkers(gray1)
     corners2, ids2, _ = detector.detectMarkers(gray2)
@@ -99,6 +104,35 @@ while True:
 
             x, y, z = center_3d
 
+            #rotation matrix
+
+            p0 = points_3d[:, 0]
+            p1 = points_3d[:, 1]
+            p2 = points_3d[:, 2]
+            p3 = points_3d[:, 3]
+
+            # oś X markera
+            x_axis = p1 - p0
+            x_axis /= np.linalg.norm(x_axis)
+
+            # oś Y markera
+            y_axis = p3 - p0
+            y_axis /= np.linalg.norm(y_axis)
+
+            # oś Z = normalna do płaszczyzny
+            z_axis = np.cross(x_axis, y_axis)
+            z_axis /= np.linalg.norm(z_axis)
+
+            # poprawka ortogonalności
+            y_axis = np.cross(z_axis, x_axis)
+
+            R_marker = np.column_stack((x_axis, y_axis, z_axis))
+
+            theta_y = np.arctan2(R_marker[0,2], R_marker[2,2])
+            theta_z = np.arctan2(R_marker[1,0], R_marker[1,1])
+            theta_y_deg = np.degrees(theta_y)
+            theta_z_deg = np.degrees(theta_z)
+
             # =====================
             # RYSOWANIE
             # =====================
@@ -106,7 +140,8 @@ while True:
             aruco.drawDetectedMarkers(frame1, [corners1[idx1]])
             aruco.drawDetectedMarkers(frame2, [corners2[idx2]])
 
-            text = f"ID:{marker_id} X:{x:.2f} Y:{y:.2f} Z:{z:.2f}"
+            text = f"ID:{marker_id} X:{x:.4f} Y:{y:.4f} Z:{z:.4f} y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
+            print(text)
 
             cv2.putText(
                 frame1,
@@ -130,6 +165,8 @@ while True:
 
     cv2.imshow("Camera 1", frame1)
     cv2.imshow("Camera 2", frame2)
+
+    time.sleep(0.10)
 
     if cv2.waitKey(1) == 27:
         break

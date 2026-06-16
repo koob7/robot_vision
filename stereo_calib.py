@@ -15,8 +15,8 @@ MARKER_SIZE = 0.04
 camera_matrix_1 = np.load("stored_calibrations/mx_brio/camera_matrix.npy")
 dist_coeffs_1 = np.load("stored_calibrations/mx_brio/dist_coeffs.npy")
 
-camera_matrix_2 = np.load("stored_calibrations/creative/camera_matrix.npy")
-dist_coeffs_2 = np.load("stored_calibrations/creative/dist_coeffs.npy")
+camera_matrix_2 = np.load("stored_calibrations/mx_brio2/camera_matrix.npy")
+dist_coeffs_2 = np.load("stored_calibrations/mx_brio2/dist_coeffs.npy")
 
 # Stereo extrinsics
 R = np.load("stored_calibrations/stereo/R.npy")
@@ -65,6 +65,12 @@ while True:
 
     corners1, ids1, _ = detector.detectMarkers(gray1)
     corners2, ids2, _ = detector.detectMarkers(gray2)
+
+    for i in range(len(ids1)):
+        aruco.drawDetectedMarkers(frame1, [corners1[i]])
+
+    for i in range(len(ids2)):
+        aruco.drawDetectedMarkers(frame2, [corners2[i]])
 
     if ids1 is not None and ids2 is not None:
 

@@ -28,7 +28,7 @@ elif config.current_camera == "mx_brio_2":
     camera_source = 0  # indeks kamery MX Brio //480 x 640
 
 elif config.current_camera == "mx_brio_3":
-    camera_source = 0  # indeks kamery MX Brio //960 x 1280
+    camera_source = 2  # indeks kamery MX Brio //960 x 1280
 
 # base_marker_id = 53  # ID czarne 6x6 ramka 5
 base_marker_id = 54  # białe 6x6 ramka 5
@@ -99,9 +99,9 @@ detector = cv2.aruco.ArucoDetector(aruco_dict)
 cap = cv2.VideoCapture(camera_source)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 960)
-# cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
-cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
-cap.set(cv2.CAP_PROP_FOCUS, 30)  
+cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+# cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+# cap.set(cv2.CAP_PROP_FOCUS, 30)  
 # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.25)  # manual (zależne od kamery)
 # cap.set(cv2.CAP_PROP_EXPOSURE, -4)
 # cap.set(cv2.CAP_PROP_GAIN, 0)
@@ -109,13 +109,13 @@ cap.set(cv2.CAP_PROP_FOCUS, 30)
 # --- ekspozycja manual ---
 # cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 2) # auto mode
 cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 1) # manual mode
-cap.set(cv2.CAP_PROP_EXPOSURE, -8) # krótszy czas naświetlania bardzo poprawił skoki w odczytywanej pozycji
+cap.set(cv2.CAP_PROP_EXPOSURE, -7) # krótszy czas naświetlania bardzo poprawił skoki w odczytywanej pozycji
 
 # --- ISO / gain ---
 cap.set(cv2.CAP_PROP_GAIN, 80) # 0 = 100iso,  255 = 1600iso
 
 # --- obraz ---
-cap.set(cv2.CAP_PROP_BRIGHTNESS, 150)
+cap.set(cv2.CAP_PROP_BRIGHTNESS, 10)#10 lub 150
 cap.set(cv2.CAP_PROP_CONTRAST, 150)
 cap.set(cv2.CAP_PROP_SATURATION, 0)
 cap.set(cv2.CAP_PROP_SHARPNESS, 100)
@@ -155,45 +155,68 @@ for i in range (30):
 # cv2.imshow("Grid Original", cv2.resize(frame, None, fx=0.5, fy=0.5))
 # cv2.imshow("Grid Undistorted", cv2.resize(undistorted, None, fx=0.5, fy=0.5))
 
-if not ret:
-    print("Nie udało się pobrać klatki z kamery.")
+NUM_FRAMES = 100
+
+R_list = []
+t_list = []
+
+for i in range(NUM_FRAMES):
+
+    ret, frame = cap.read()
+
+    if not ret:
+        print("Nie udało się pobrać klatki.")
+        continue
+
+    inv = cv2.bitwise_not(frame)
+
+    corners, ids, _ = detector.detectMarkers(inv)
+
+    if ids is None:
+        continue
+
+    base_i = np.where(ids.flatten() == base_marker_id)[0]
+
+    if len(base_i) != 1:
+        continue
+
+    rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+        corners,
+        marker_length,
+        camera_matrix,
+        dist_coeffs,
+    )
+
+    rvec = rvecs[base_i[0]]
+    tvec = tvecs[base_i[0]]
+
+    R, _ = cv2.Rodrigues(rvec)
+
+    R_list.append(R)
+    t_list.append(tvec.flatten())
+
+print(f"Zebrano {len(R_list)} poprawnych klatek")
+
+if len(R_list) == 0:
+    print("Brak poprawnych detekcji")
     exit(1)
 
-gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-print({frame.shape})
+# --- Średnia translacja ---
+t_avg = np.mean(t_list, axis=0)
 
-inv = cv2.bitwise_not(frame)
+# --- Średnia rotacja ---
+R_avg = np.mean(R_list, axis=0)
 
-# --- Detekcja markerów ---
-corners, ids, _ = detector.detectMarkers(inv)
+# Ortogonalizacja (ważne!)
+U, _, Vt = np.linalg.svd(R_avg)
+R_avg = U @ Vt
 
-if ids is None:
-    print("Nie wykryto żadnych markerów. Upewnij się, że marker bazowy jest widoczny.")
-    exit(1)
-
-base_i = np.where(ids.flatten() == base_marker_id)[0]
-
-if len(base_i) != 1:
-    print(f"Nie wykryto markera bazowego (ID {base_marker_id}).")
-    for i in range(len(ids)):
-        print(f"Wykryty marker ID: {ids[i][0]}")
-    exit(1)
-
-rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-    corners,
-    marker_length,
-    camera_matrix,
-    dist_coeffs,
-)
-
-rvec = rvecs[base_i[0]]
-tvec = tvecs[base_i[0]]
-R, _ = cv2.Rodrigues(rvec)
-
-# R = get_default_correction(base_marker_id, R)
+# --- Home transform ---
 home_T = np.eye(4)
-home_T[:3,:3] = R
-home_T[:3, 3] = tvec.flatten()
+home_T[:3, :3] = R_avg
+home_T[:3, 3] = t_avg
+
+print(home_T)
 
 while True:
     ret, frame = cap.read()
@@ -228,6 +251,56 @@ while True:
             dist_coeffs,
         )
 
+
+        base_56 = np.where(ids.flatten() == 56)[0]
+        base_49 = np.where(ids.flatten() == 49)[0]
+
+        if len(base_56) == 1 and len(base_49) == 1:
+
+
+
+
+            #problemem jest mała zmiana pozycji między markerami - może gdyby zrobić to dla markera bazowego to było by lepiej
+
+            # dla ramienia lekko pochylonego, kamerki bez podstawki, robota w prawym zakresie bład na osi X był mniejszy niż 1st
+
+            #dlaczego w lewym zakresie ruchu błąd jest większy?
+            #re prawdopodobnie matma jest poprawna ale focus jest gorszy z lewej strony i odczyty są błędne
+
+
+
+
+            x_56 = tvecs[base_56[0]][0][0]
+            x_49 = tvecs[base_49[0]][0][0]
+
+            y_49 = tvecs[base_49[0]][0][1]
+            y_56 = tvecs[base_56[0]][0][1]
+
+            z_56 = tvecs[base_56[0]][0][2]
+            z_49 = tvecs[base_49[0]][0][2]
+
+            abs_diff_x = x_56 - x_49
+            abs_diff_y = y_56 - y_49
+            abs_diff_z = z_56 - z_49
+
+            base_diagonal = math.sqrt(abs_diff_x**2 + abs_diff_z**2)
+
+            height = abs_diff_y
+            
+            diagonal = math.sqrt(base_diagonal**2 + height**2)
+
+            # tg_y =  abs_diff_z / abs_diff_x
+
+            angle_deg_y = np.degrees(np.arctan2(abs_diff_z, abs_diff_x))
+
+            # tg_z = height / base_diagonal
+
+            angle_deg_z = np.degrees(np.arctan2(height, base_diagonal))
+            
+            print(f"angle_deg_y: {angle_deg_y:.2f}, angle_deg_z: {angle_deg_z:.2f}, abs_diff_x: {abs_diff_x:.3f}, abs_diff_y: {abs_diff_y:.3f}, abs_diff_z: {abs_diff_z:.3f}, diagonal: {diagonal:.3f}")
+
+
+
         for i in range(len(ids)):
             global_rvec = rvecs[i]
             global_tvec = tvecs[i]
@@ -239,8 +312,8 @@ while True:
             global_T[:3, 3] = global_tvec.flatten()
 
             # robot_T = rotate_to_base(home_T, global_T)
-            robot_T = np.linalg.inv(home_T) @ global_T
-            # robot_T = global_T
+            # robot_T = np.linalg.inv(home_T) @ global_T
+            robot_T = global_T
 
             robot_R = robot_T[:3,:3]
             robot_tvec = robot_T[:3, 3]
@@ -283,7 +356,7 @@ while True:
             lines = [
                 f"ID {ids[i][0]}",
                 f"X={robot_tvec[0]:.3f} Y={robot_tvec[1]:.3f} Z={robot_tvec[2]:.3f} m",
-                f"rot angles X {angles[0]:.1f}, rot Y {angles[1]:.1f}, rot Z {angles[2]:.1f} deg",
+                # f"rot angles X {angles[0]:.1f}, rot Y {angles[1]:.1f}, rot Z {angles[2]:.1f} deg",
                 # f"rot angles2 X {angles2[0]:.1f}, rot Y {angles2[1]:.1f}, rot Z {angles2[2]:.1f} deg",
                 f"rot manual Y {theta_y_deg:.1f}, rot Z {theta_z_deg:.1f} deg"
             ]
