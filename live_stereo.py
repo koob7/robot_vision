@@ -112,6 +112,9 @@ while True:
 
         common_ids = set(ids1_flat).intersection(set(ids2_flat))
 
+        R54 = np.eye(3)
+        R56 = np.eye(3)
+
         for marker_id in common_ids:
 
             idx1 = np.where(ids1_flat == marker_id)[0][0]
@@ -162,6 +165,12 @@ while True:
 
             R_marker = np.column_stack((x_axis, y_axis, z_axis))
 
+            if (marker_id == 56):
+                R56 = R_marker
+
+            if (marker_id == 54):
+                R54 = R_marker
+
             theta_y = np.arctan2(R_marker[0,2], R_marker[2,2])
             theta_z = np.arctan2(R_marker[1,0], R_marker[1,1])
             theta_y_deg = np.degrees(theta_y)
@@ -196,9 +205,22 @@ while True:
                 (0, 255, 0),
                 2
             )
+        
+        # global_T @ home_T.T
+        R56_diff = R54.T @ R56
 
-    cv2.imshow("Camera 1", frame1)
-    cv2.imshow("Camera 2", frame2)
+        theta_y = np.arctan2(R56_diff[0,2], R56_diff[2,2])
+        theta_z = np.arctan2(R56_diff[1,0], R56_diff[1,1])
+        theta_y_deg = np.degrees(theta_y)
+        theta_z_deg = np.degrees(theta_z)
+
+        text = f"R56_diff y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
+        print(text)
+
+    scaled_frame1 = cv2.resize(frame1, (640, 480))
+    scaled_frame2 = cv2.resize(frame2, (640, 480))
+    cv2.imshow("Camera 1", scaled_frame1)
+    cv2.imshow("Camera 2", scaled_frame2)
 
     time.sleep(0.10)
 

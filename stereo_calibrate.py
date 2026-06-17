@@ -143,8 +143,10 @@ def collect_stereo_pairs(left_index, right_index, board, output_dir, min_corners
                 2,
             )
 
-            cv2.imshow("Stereo left", left_display)
-            cv2.imshow("Stereo right", right_display)
+            scaled_frame1 = cv2.resize(left_display, (640, 480))
+            scaled_frame2 = cv2.resize(right_display, (640, 480))
+            cv2.imshow("Stereo left", scaled_frame1)
+            cv2.imshow("Stereo right", scaled_frame2)
 
             key = cv2.waitKey(1) & 0xFF
             if key in (27, ord("q")):
