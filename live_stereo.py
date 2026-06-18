@@ -207,6 +207,8 @@ while True:
             )
         
         # global_T @ home_T.T
+        #R54 - home
+        #R56 - target
         R56_diff = R54.T @ R56
 
         theta_y = np.arctan2(R56_diff[0,2], R56_diff[2,2])
