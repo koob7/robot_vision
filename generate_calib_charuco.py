@@ -39,13 +39,18 @@ board = cv2.aruco.CharucoBoard(
     aruco_dict
 )
 
+color = "white"
+
 img = board.generateImage((width_px, height_px))
-img = 255 - img  # odwrócenie kolorów (czarne na białe)
+if color == "black":
+    pass
+elif color == "white":
+    img = 255 - img  # odwrócenie kolorów (czarne na białe)
 
 pil_img = Image.fromarray(img)
 
 # --- PDF ---
-pdf_file = "charuco_calib_board_5x8_35.pdf"
+pdf_file = f"charuco_calib_board_{columnsX}x{rowsY}_{int(squareLength * 1000)}_{color}.pdf"
 
 c = canvas.Canvas(
     pdf_file,
