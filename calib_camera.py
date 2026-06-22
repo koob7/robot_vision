@@ -1,92 +1,82 @@
-import os
-
+from datetime import date, datetime
+from pathlib import Path
 import cv2
-import numpy as np
-import glob
 
 import config
+import camera
+import calibration
+import numpy as np
 
-# --- Parametry planszy ChArUco ---
-columnsX = config.columnsX
-rowsY = config.rowsY
-squareLength = config.squareLength # metry
-markerLength = config.markerLength # metry
 
-# --- Słownik ArUco ---
-aruco_dict = cv2.aruco.getPredefinedDictionary(config.ARUCO_DICT)
+import os
 
-# --- Tworzenie planszy ChArUco ---
-board = cv2.aruco.CharucoBoard(
-    (columnsX, rowsY),
-    squareLength,
-    markerLength,
-    aruco_dict
+camera_name = "mx_brio_for_business"
+min_corners = 10
+base_dir = os.path.dirname(os.path.abspath(__file__))
+path_dir = f"{base_dir}\\{config.calib_images_path}\\single\\{camera_name}\\{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}"
+
+
+camera = camera.Camera(
+    camera_name=camera_name,
+    width=1920,
+    height=1080,
+    position=camera.position.SINGLE
 )
 
-# --- Detektor ---
-detector = cv2.aruco.ArucoDetector(aruco_dict)
-
-# --- Listy punktów ---
-all_charuco_corners = []
-all_charuco_ids = []
-image_size = None
-
-# --- Wczytaj zdjęcia ---
-images = glob.glob(f"calib_images_8x5x35/{config.current_camera}/*.png") + \
-          glob.glob(f"calib_images_8x5x35/{config.current_camera}/*.jpg")
-
-for fname in images:
-    img = cv2.imread(fname)
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    if image_size is None:
-        image_size = gray.shape[::-1]
-
-    print(f"Przetwarzanie {fname}...")
-
-    # --- Detekcja markerów ---
-    corners, ids, _ = detector.detectMarkers(gray)
-
-    if ids is not None:
-        # --- Interpolacja narożników ChArUco ---
-        retval, charuco_corners, charuco_ids = cv2.aruco.interpolateCornersCharuco(
-            corners, ids, gray, board
-        )
-
-        if retval > 10:  # minimum punktów
-            all_charuco_corners.append(charuco_corners)
-            all_charuco_ids.append(charuco_ids)
-            print(f"wykryto {retval} punktów")
-        else:
-            print(f"za mało punktów ({retval}), pomijam")
-    else:
-        print(f"nie wykryto markerów")
-
-if len(all_charuco_corners) == 0:
-    print("Nie wykryto żadnych punktów ChArUco. Kalibracja niemożliwa.")
-    # pamiętaj że kolejność kwadratów i kodów QR jest ważna
-    # przykładowo dla popularnego calib.io szachownica zaczynająca
-    # się od kodu QR nie jest rozpoznawana pomimo dobrego słownika
-    exit(1)
-
-# --- Kalibracja ---
-ret, camera_matrix, dist_coeffs, rvecs, tvecs = cv2.aruco.calibrateCameraCharuco(
-    all_charuco_corners,
-    all_charuco_ids,
-    board,
-    image_size,
-    None,
-    None
+calibration = calibration.calibration(
+    name=camera_name,
+    min_corners=min_corners,
+    scale_factor=camera.get_scale_factor()
 )
 
-# --- Wyniki ---
-print("Błąd reprojekcji:", ret)
-print("Macierz kamery:\n", camera_matrix)
-print("Współczynniki dystorsji:\n", dist_coeffs)
+photo_index = 0
 
-# --- Zapis ---
-if not os.path.exists(f"stored_calibrations/{config.current_camera}"):
-    os.makedirs(f"stored_calibrations/{config.current_camera}")
+while True:
+    frame = camera.get_frame()
 
-np.save(f"stored_calibrations/{config.current_camera}/camera_matrix.npy", camera_matrix)
-np.save(f"stored_calibrations/{config.current_camera}/dist_coeffs.npy", dist_coeffs)
+    if frame is None:
+        continue
+
+    detection = calibration.display_next_frame(frame)
+
+    valid_detection = detection[0]
+
+    key = detection[1]
+
+    if key in (27, ord("q")):
+        break
+
+    if key == 32: # SPACE
+        if not valid_detection:
+            print("Pominięto zapis: plansza nie jest poprawnie wykryta.")
+            continue
+
+        path = f"{path_dir}\\{photo_index:03d}.png"
+
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+        cv2.imwrite(path, frame)
+
+        photo_index += 1
+        print(f"Zapisano zdjęcie {str(photo_index)}: {path}")
+
+print("Zakończono zapis zdjęć.")
+
+
+corners_list, ids_list, image_size = calibration.load_charuco_measurements(path_dir)
+ret, camera_matrix, dist_coeffs, rvecs, tvecs = calibration.calibrate_camera(corners_list, ids_list, image_size)
+
+
+if not ret:
+    print("Kalibracja nie powiodła się.")
+else:
+    print("Kalibracja zakończona sukcesem.")
+
+    print(f"Zapisano wyniki kalibracji w: {camera.get_calib_path()}")
+    camera.save_camera_matrix(camera_matrix)
+    camera.save_dist_coeffs(dist_coeffs)
+
+camera.__del__()
+
+
+

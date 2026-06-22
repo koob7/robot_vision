@@ -4,16 +4,11 @@ import numpy as np
 import time
 
 import config
+import camera
 
-# =========================
-# PARAMETRY
-# =========================
 
-MARKER_SIZE = config.detected_marker_size_mm / 1000  # metry
 
-# =========================
-# KALIBRACJA
-# =========================
+
 
 camera_matrix_right = np.load("stored_calibrations/mx_brio/camera_matrix.npy")#right
 dist_coeffs_right = np.load("stored_calibrations/mx_brio/dist_coeffs.npy")

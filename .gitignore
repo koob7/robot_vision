@@ -1,3 +1,4 @@
 *jpg
 /calib_images_stereo
 *__pycache__/
+*calib_images

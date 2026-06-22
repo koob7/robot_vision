@@ -7,8 +7,8 @@ markerLength = 0.026   # metry
 
 detected_marker_size_mm = 40
 
-calib_images_path = "calib_images/"
-calib_results_path = "calib_results/"
+calib_images_path = "calib_images"
+calib_results_path = "calib_results"
 
 
 camera_names = {

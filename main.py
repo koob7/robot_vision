@@ -1,14 +1,15 @@
-import camera
-import cv2
+from pathlib import Path
+import config
 
-camera_testowa = camera.Camera(
-    camera_name="mx_brio_for_business", 
-    width=3840,
-    height=2160,
-    position=camera.camera_position.LEFT
-)
+import os
 
-frame = camera_testowa.get_frame()
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
-camera_testowa.display_frame()
-wait_key = cv2.waitKey(0)
+path = f"{base_dir}\\{config.calib_images_path}\\single\\mx_brio_for_business\\{0:03d}.png"
+
+print("PATH:", path)
+print("PARENT:", Path(path).parent)
+
+Path(path).parent.mkdir(parents=True, exist_ok=True)
+
+print("EXISTS:", Path(path).parent.exists())
