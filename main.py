@@ -1,15 +1,26 @@
-from pathlib import Path
-import config
+import single_determine_pose
+import numpy as np
+import time
 
-import os
+determine_pose = single_determine_pose.single_determine_pose()
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
+while True:
+    found_markers = determine_pose.find_markers()
 
-path = f"{base_dir}\\{config.calib_images_path}\\single\\mx_brio_for_business\\{0:03d}.png"
+    if found_markers:
+        if 50 in found_markers and 53 in found_markers:
+            home_R = found_markers[53]["qr_R"]
+            target_R = found_markers[50]["qr_R"]
 
-print("PATH:", path)
-print("PARENT:", Path(path).parent)
+            R_diff = home_R.T @ target_R
 
-Path(path).parent.mkdir(parents=True, exist_ok=True)
+            theta_y = np.arctan2(R_diff[0,2], R_diff[2,2])
+            theta_z = np.arctan2(R_diff[1,0], R_diff[1,1])
+            theta_y_deg = np.degrees(theta_y)
+            theta_z_deg = np.degrees(theta_z)
 
-print("EXISTS:", Path(path).parent.exists())
+            text = f"R_diff y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
+            print(text)
+            # time.sleep(0.5)
+
+

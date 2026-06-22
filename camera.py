@@ -7,6 +7,7 @@ import numpy as np
 from pygrabber.dshow_graph import FilterGraph
 import os
 from pathlib import Path
+from datetime import date, datetime
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,6 +34,7 @@ class Camera:
         self.position = position
         self.camera_name = camera_name
         self.camera_dir = f"{base_dir}\\{config.calib_results_path}\\{self.position.value}\\{self.camera_name}_{self.width}_{self.height}px"
+        self.photo_dir = f"{base_dir}\\{config.calib_images_path}\\{self.position.value}\\{self.camera_name}_{self.width}_{self.height}px\\{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         
         if camera_name not in config.camera_names:
             print(f"Nieznana kamera: {camera_name}")
@@ -57,6 +59,9 @@ class Camera:
 
         self.configure_camera()
         self.camera_ready = True
+
+    def is_ready(self):
+        return self.camera_ready
 
     def configure_camera(self):
         for prop_id, value in config.camera_config_table:
@@ -88,16 +93,19 @@ class Camera:
     
     def save_camera_matrix(self, camera_matrix):
         calib_path = f"{self.get_calib_path()}\\camera_matrix.npy"
-        Path(self.get_calib_path()).mkdir(parents=True, exist_ok=True)
+        Path(calib_path).parent.mkdir(parents=True, exist_ok=True)
         np.save(calib_path, camera_matrix)
 
     def save_dist_coeffs(self, dist_coeffs):
         calib_path = f"{self.get_calib_path()}\\dist_coeffs.npy"
-        Path(self.get_calib_path()).mkdir(parents=True, exist_ok=True)
+        Path(calib_path).parent.mkdir(parents=True, exist_ok=True)
         np.save(calib_path, dist_coeffs)
     
     def get_calib_path(self):
         return self.camera_dir
+    
+    def get_photo_dir(self):
+        return self.photo_dir
     
     def get_frame(self):
         if self.camera_ready:
@@ -107,7 +115,7 @@ class Camera:
 
         self.frame = self.get_dummy_frame()
         return self.frame
-
+ 
     def release(self):
         if self.camera_ready:
             self.cap.release()
@@ -119,6 +127,9 @@ class Camera:
         scale = self.display_width/self.width
         scaled_frame = cv2.resize(self.frame, None, fx=scale, fy=scale)
         cv2.imshow(self.camera_name+"_"+str(self.width) +"_"+str(self.height)+"px", scaled_frame)
+
+    def get_name(self):
+        return f"{self.camera_name}_{self.width}_{self.height}px"
 
     def get_dummy_frame(self):
         img = np.zeros((self.display_height, self.display_width, 3), dtype=np.uint8)

@@ -5,7 +5,7 @@ rowsY = 8
 squareLength = 0.035   # metry
 markerLength = 0.026   # metry
 
-detected_marker_size_mm = 40
+detected_marker_size_mm = 0.040
 
 calib_images_path = "calib_images"
 calib_results_path = "calib_results"

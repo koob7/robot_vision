@@ -1,4 +1,3 @@
-from datetime import date, datetime
 from pathlib import Path
 import cv2
 
@@ -13,7 +12,6 @@ import os
 camera_name = "mx_brio_for_business"
 min_corners = 10
 base_dir = os.path.dirname(os.path.abspath(__file__))
-path_dir = f"{base_dir}\\{config.calib_images_path}\\single\\{camera_name}\\{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}"
 
 
 camera = camera.Camera(
@@ -51,7 +49,7 @@ while True:
             print("Pominięto zapis: plansza nie jest poprawnie wykryta.")
             continue
 
-        path = f"{path_dir}\\{photo_index:03d}.png"
+        path = f"{camera.get_photo_dir()}\\{photo_index:03d}.png"
 
         Path(path).parent.mkdir(parents=True, exist_ok=True)
 
@@ -63,7 +61,7 @@ while True:
 print("Zakończono zapis zdjęć.")
 
 
-corners_list, ids_list, image_size = calibration.load_charuco_measurements(path_dir)
+corners_list, ids_list, image_size = calibration.load_charuco_measurements(camera.get_photo_dir())
 ret, camera_matrix, dist_coeffs, rvecs, tvecs = calibration.calibrate_camera(corners_list, ids_list, image_size)
 
 
@@ -71,7 +69,6 @@ if not ret:
     print("Kalibracja nie powiodła się.")
 else:
     print("Kalibracja zakończona sukcesem.")
-
     print(f"Zapisano wyniki kalibracji w: {camera.get_calib_path()}")
     camera.save_camera_matrix(camera_matrix)
     camera.save_dist_coeffs(dist_coeffs)

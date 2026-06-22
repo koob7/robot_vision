@@ -1,5 +1,5 @@
 from PIL import Image
-
+from pathlib import Path
 import cv2
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
@@ -50,7 +50,9 @@ elif color == "white":
 pil_img = Image.fromarray(img)
 
 # --- PDF ---
-pdf_file = f"charuco_calib_board_{columnsX}x{rowsY}_{int(squareLength * 1000)}_{color}.pdf"
+pdf_file = f"calib_boards\\charuco_calib_board_{columnsX}x{rowsY}_{int(squareLength * 1000)}_{color}.pdf"
+
+Path(pdf_file).parent.mkdir(parents=True, exist_ok=True)
 
 c = canvas.Canvas(
     pdf_file,

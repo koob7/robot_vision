@@ -85,6 +85,7 @@ class calibration:
             print("Brak danych do kalibracji.")
             return False, None, None, None, None
         return cv2.aruco.calibrateCameraCharuco(corners_list, ids_list, self.board, image_size, None, None)
+    
     def display_next_frame (self, frame):
         detection = self.detect_charuco(frame)
 
@@ -128,4 +129,68 @@ class calibration:
         key = cv2.waitKey(1) & 0xFF
 
         return detection is not None, key
-            
+    
+    def stereo_calibration(self, left_paths, right_paths):
+        
+        object_points = []
+        image_points_left = []
+        image_points_right = []
+
+        board_corners = self.get_board_corners()
+
+        object_points = []
+        image_points_left = []
+        image_points_right = []
+
+        left_images = list(Path(left_paths).glob("*.png"))
+        right_images = list(Path(right_paths).glob("*.png"))
+
+        print(f"Znaleziono {len(left_images)} zdjęć w {left_paths}")
+        print(f"Znaleziono {len(right_images)} zdjęć w {right_paths}")
+
+        for left_photo_path, right_photo_path in zip(left_images, right_images):
+
+            left_photo = cv2.imread(str(left_photo_path))
+            right_photo = cv2.imread(str(right_photo_path))
+
+            detection_left = self.detect_charuco(left_photo)
+            detection_right = self.detect_charuco(right_photo)
+
+            if detection_left is None or detection_right is None:
+                continue
+
+            if (detection_left is None or detection_right is None):
+                continue
+
+            left_ids = detection_left.ids.flatten()
+            right_ids = detection_right.ids.flatten()
+            common_ids = np.intersect1d(left_ids, right_ids)
+
+            if common_ids.size < self.min_corners:
+                continue
+
+            left_lookup = {int(marker_id): idx for idx, marker_id in enumerate(left_ids)}
+            right_lookup = {int(marker_id): idx for idx, marker_id in enumerate(right_ids)}
+
+            object_view = []
+            left_view = []
+            right_view = []
+
+            for marker_id in common_ids:
+                left_idx = left_lookup[int(marker_id)]
+                right_idx = right_lookup[int(marker_id)]
+
+                object_view.append(board_corners[int(marker_id)])
+                left_view.append(detection_left.corners[left_idx, 0])
+                right_view.append(detection_right.corners[right_idx, 0])
+
+            object_points.append(np.asarray(object_view, dtype=np.float32).reshape(-1, 1, 3))
+            image_points_left.append(np.asarray(left_view, dtype=np.float32).reshape(-1, 1, 2))
+            image_points_right.append(np.asarray(right_view, dtype=np.float32).reshape(-1, 1, 2))
+
+        if not object_points:
+            print("Nie znaleziono wspólnych markerów na parach zdjęć.")
+            return None
+
+        return object_points, image_points_left, image_points_right
+                

@@ -10,17 +10,17 @@ import camera
 
 
 
-camera_matrix_right = np.load("stored_calibrations/mx_brio/camera_matrix.npy")#right
-dist_coeffs_right = np.load("stored_calibrations/mx_brio/dist_coeffs.npy")
+camera_matrix_right = np.load("calib_results/right/mx_brio_1920_1080px/camera_matrix.npy")#right
+dist_coeffs_right = np.load("calib_results/right/mx_brio_1920_1080px/dist_coeffs.npy")
 right_index = 0
 
-camera_matrix_left = np.load("stored_calibrations/mx_brio2/camera_matrix.npy")#left
-dist_coeffs_left = np.load("stored_calibrations/mx_brio2/dist_coeffs.npy")
-left_index = 2
+camera_matrix_left = np.load("calib_results/left/mx_brio_for_business_1920_1080px/camera_matrix.npy")#left
+dist_coeffs_left = np.load("calib_results/left/mx_brio_for_business_1920_1080px/dist_coeffs.npy")
+left_index = 3
 
 # Stereo extrinsics
-R = np.load("stored_calibrations/stereo/R.npy")
-T = np.load("stored_calibrations/stereo/T.npy")
+R = np.load("calib_results/stereo/mx_brio_for_business_mx_brio/R.npy")
+T = np.load("calib_results/stereo/mx_brio_for_business_mx_brio/T.npy")
 
 # =========================
 # PROJECTION MATRICES
@@ -48,10 +48,10 @@ detector = aruco.ArucoDetector(aruco_dict, aruco_params)
 cap1 = cv2.VideoCapture(left_index)
 cap2 = cv2.VideoCapture(right_index)
 
-cap1.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-cap1.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
-cap2.set(cv2.CAP_PROP_FRAME_WIDTH, 3840)
-cap2.set(cv2.CAP_PROP_FRAME_HEIGHT, 2160)
+cap1.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap1.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+cap2.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+cap2.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
 
 
 # =========================
@@ -160,10 +160,10 @@ while True:
 
             R_marker = np.column_stack((x_axis, y_axis, z_axis))
 
-            if (marker_id == 56):
+            if (marker_id == 50):
                 R56 = R_marker
 
-            if (marker_id == 54):
+            if (marker_id == 53):
                 R54 = R_marker
 
             theta_y = np.arctan2(R_marker[0,2], R_marker[2,2])
