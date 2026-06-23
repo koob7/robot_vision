@@ -3,13 +3,15 @@ import numpy as np
 import math
 import time
 from scipy.spatial.transform import Rotation as Rot
+from sympy import public
 
 import config
 import camera
 import vision_helper
+import determine_pose
 
 
-class single_determine_pose:
+class single_determine_pose(determine_pose.determine_pose):
     def __init__(self):
         self.camera = camera.Camera("mx_brio_for_business", 1920, 1080, position=camera.position.SINGLE)
 
