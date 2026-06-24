@@ -10,6 +10,9 @@ detected_marker_size_mm = 0.040
 calib_images_path = "calib_images"
 calib_results_path = "calib_results"
 
+CAMERA_WIDTH = 1920
+CAMERA_HEIGHT = 1080
+
 
 camera_names = {
     "mx_brio": "MX Brio",

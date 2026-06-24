@@ -6,7 +6,6 @@ def merge_camera_name (left_name, right_name):
 
 
 
-
 import numpy as np
 import cv2
 

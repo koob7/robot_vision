@@ -16,8 +16,8 @@ base_dir = os.path.dirname(os.path.abspath(__file__))
 
 camera = camera.Camera(
     camera_name=camera_name,
-    width=1920,
-    height=1080,
+    width=config.CAMERA_WIDTH,
+    height=config.CAMERA_HEIGHT,
     position=camera.position.SINGLE
 )
 

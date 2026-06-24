@@ -20,8 +20,8 @@ class stereo_determine_pose(determine_pose.determine_pose):
         left_camera_name = "mx_brio_for_business"
         right_camera_name = "mx_brio"
 
-        self.camera = camera.Camera(left_camera_name, 1920, 1080, position=camera.position.LEFT)
-        self.camera_right = camera.Camera(right_camera_name, 1920, 1080, position=camera.position.RIGHT)
+        self.camera = camera.Camera(left_camera_name, config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.LEFT)
+        self.camera_right = camera.Camera(right_camera_name, config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.RIGHT)
 
         if not self.camera.is_ready() or not self.camera_right.is_ready():
             print("Nie można uruchomić kamery. Sprawdź połączenie i konfigurację.")
@@ -33,8 +33,8 @@ class stereo_determine_pose(determine_pose.determine_pose):
         self.camera_matrix_right = self.camera_right.get_camera_matrix()
         self.dist_coeffs_right = self.camera_right.get_dist_coeffs()
 
-        self.stereo_R = np.load(f"{base_dir}\\{config.calib_results_path}\\stereo\\{vision_helper.merge_camera_name(left_camera_name, right_camera_name)}\\R.npy")
-        self.stereo_T = np.load(f"{base_dir}\\{config.calib_results_path}\\stereo\\{vision_helper.merge_camera_name(left_camera_name, right_camera_name)}\\T.npy")
+        self.stereo_R = np.load(f"{base_dir}\\{config.calib_results_path}\\stereo\\{vision_helper.merge_camera_name(self.camera.get_name(), self.camera_right.get_name())}\\R.npy")
+        self.stereo_T = np.load(f"{base_dir}\\{config.calib_results_path}\\stereo\\{vision_helper.merge_camera_name(self.camera.get_name(), self.camera_right.get_name())}\\T.npy")
 
         self.projection_matrix_left = self.camera_matrix_left @ np.hstack((np.eye(3), np.zeros((3, 1))))
         self.projection_matrix_right = self.camera_matrix_right @ np.hstack((self.stereo_R, self.stereo_T))
@@ -51,6 +51,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
             30,
             0.001
         )
+
+    def get_name(self):
+        return f"{self.camera.get_name()}-{self.camera_right.get_name()}"
 
     def is_ready(self):
         return self.camera.is_ready() and self.camera_right.is_ready()

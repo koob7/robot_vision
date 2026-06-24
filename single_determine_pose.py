@@ -13,7 +13,7 @@ import determine_pose
 
 class single_determine_pose(determine_pose.determine_pose):
     def __init__(self):
-        self.camera = camera.Camera("mx_brio_for_business", 1920, 1080, position=camera.position.SINGLE)
+        self.camera = camera.Camera("mx_brio_for_business", config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.SINGLE)
 
         if not self.camera.is_ready():
             print("Nie można uruchomić kamery. Sprawdź połączenie i konfigurację.")
@@ -36,6 +36,9 @@ class single_determine_pose(determine_pose.determine_pose):
 
     def is_ready(self):
         return self.camera.is_ready()
+    
+    def get_name(self):
+        return f"{self.camera.get_name()}"
 
     def find_markers(self):
         frame = self.camera.get_frame()

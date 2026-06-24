@@ -3,7 +3,7 @@ import stereo_determine_pose
 import numpy as np
 import time
 
-determine_pose = stereo_determine_pose.stereo_determine_pose()
+determine_pose = single_determine_pose.single_determine_pose()
 
 while True:
     found_markers = determine_pose.find_markers()
