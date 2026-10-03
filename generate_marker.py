@@ -6,7 +6,10 @@ from reportlab.lib.utils import ImageReader
 from reportlab.lib import colors
 from PIL import Image
 
-import config
+if __package__:
+    from . import config
+else:
+    import config
 
 # --- ARGUMENTY ---
 parser = argparse.ArgumentParser(description="Generator markera ArUco do PDF")

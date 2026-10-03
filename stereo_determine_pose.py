@@ -5,23 +5,30 @@ import time
 from scipy.spatial.transform import Rotation as Rot
 from sympy import public
 
-import config
-import camera
-import vision_helper
-import determine_pose
+if __package__:
+    from . import config
+    from . import camera
+    from . import vision_helper
+    from . import determine_pose
+else:
+    import config
+    import camera
+    import vision_helper
+    import determine_pose
 import os
 
 
 class stereo_determine_pose(determine_pose.determine_pose):
-    def __init__(self):
+    def __init__(self, left_camera_name, right_camera_name, width_left=config.CAMERA_WIDTH, height_left=config.CAMERA_HEIGHT, width_right=config.CAMERA_WIDTH, height_right=config.CAMERA_HEIGHT):
 
         base_dir = os.path.dirname(os.path.abspath(__file__))
 
-        left_camera_name = "mx_brio_for_business"
-        right_camera_name = "mx_brio"
+        if width_left != width_right or height_left != height_right:
+            print("Nie można użyć różnych rozdzielczości dla kamer lewego i prawego.")
+            return
 
-        self.camera = camera.Camera(left_camera_name, config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.LEFT)
-        self.camera_right = camera.Camera(right_camera_name, config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.RIGHT)
+        self.camera = camera.Camera(left_camera_name, width_left, height_left, position=camera.position.LEFT)
+        self.camera_right = camera.Camera(right_camera_name, width_right, height_right, position=camera.position.RIGHT)
 
         if not self.camera.is_ready() or not self.camera_right.is_ready():
             print("Nie można uruchomić kamery. Sprawdź połączenie i konfigurację.")
@@ -57,6 +64,12 @@ class stereo_determine_pose(determine_pose.determine_pose):
 
     def is_ready(self):
         return self.camera.is_ready() and self.camera_right.is_ready()
+
+    def disconnect(self):
+        self.camera.__del__()
+        self.camera_right.__del__()
+    def __del__(self):
+        self.disconnect()
 
     def find_markers(self):
         frame_left = self.camera.get_frame()

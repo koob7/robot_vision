@@ -1,9 +1,32 @@
+import re
+
 def rotation_in_base (R_marker, R_base):
     return R_base.T @ R_marker
 
 def merge_camera_name (left_name, right_name):
     return f"{left_name}-{right_name}"
 
+def split_camera_name (merged_name):
+    names = merged_name.split("-")
+
+    if len(names) != 2:
+        return None, None
+    
+    return names[0], names[1]
+
+def get_camera_info (camera_name):
+
+    numbers = [int(n) for n in re.findall(r'\d+', camera_name)]
+
+    if len(numbers) != 2:
+        return None, None
+    
+    return numbers[0], numbers[1]
+
+def get_camera_name (camera_name):
+    name, rest = re.split(r'(?=\d)', camera_name, maxsplit=1)
+    name = name[:-1]
+    return name
 
 
 import numpy as np

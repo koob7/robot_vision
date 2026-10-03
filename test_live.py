@@ -1,9 +1,13 @@
-import single_determine_pose
-import stereo_determine_pose
+if __package__:
+    from . import single_determine_pose
+    from . import stereo_determine_pose
+else:
+    import single_determine_pose
+    import stereo_determine_pose
 import numpy as np
 import time
 
-determine_pose = single_determine_pose.single_determine_pose()
+determine_pose = single_determine_pose.single_determine_pose("mx_brio_for_business")
 
 while True:
     found_markers = determine_pose.find_markers()

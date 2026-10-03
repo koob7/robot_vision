@@ -5,15 +5,21 @@ import time
 from scipy.spatial.transform import Rotation as Rot
 from sympy import public
 
-import config
-import camera
-import vision_helper
-import determine_pose
+if __package__:
+    from . import config
+    from . import camera
+    from . import vision_helper
+    from . import determine_pose
+else:
+    import config
+    import camera
+    import vision_helper
+    import determine_pose
 
 
 class single_determine_pose(determine_pose.determine_pose):
-    def __init__(self):
-        self.camera = camera.Camera("mx_brio_for_business", config.CAMERA_WIDTH, config.CAMERA_HEIGHT, position=camera.position.SINGLE)
+    def __init__(self, camera_name, width=config.CAMERA_WIDTH, height=config.CAMERA_HEIGHT):
+        self.camera = camera.Camera(camera_name, width, height, position=camera.position.SINGLE)
 
         if not self.camera.is_ready():
             print("Nie można uruchomić kamery. Sprawdź połączenie i konfigurację.")
@@ -33,6 +39,12 @@ class single_determine_pose(determine_pose.determine_pose):
             30,
             0.001
         )
+
+    def disconnect(self):
+        self.camera.__del__()
+
+    def __del__(self):
+        self.disconnect()
 
     def is_ready(self):
         return self.camera.is_ready()
@@ -60,7 +72,10 @@ class single_determine_pose(determine_pose.determine_pose):
                 self.criteria
             )
 
-        if ids is None: 
+        if ids is None:
+            scaled_frame = cv2.resize(frame, None, fx=self.scale_factor, fy=self.scale_factor)
+            cv2.imshow(self.name, scaled_frame)
+            cv2.waitKey(1)
             return None
 
         found_markers = {}

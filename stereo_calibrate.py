@@ -1,10 +1,15 @@
 from pathlib import Path
 import cv2
-import vision_helper
-
-import config
-import camera
-import calibration
+if __package__:
+    from . import vision_helper
+    from . import config
+    from . import camera
+    from . import calibration
+else:
+    import vision_helper
+    import config
+    import camera
+    import calibration
 import numpy as np
 import cv2.aruco as aruco
 

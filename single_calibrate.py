@@ -1,9 +1,14 @@
 from pathlib import Path
 import cv2
 
-import config
-import camera
-import calibration
+if __package__:
+    from . import config
+    from . import camera
+    from . import calibration
+else:
+    import config
+    import camera
+    import calibration
 import numpy as np
 
 

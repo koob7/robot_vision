@@ -3,8 +3,12 @@ import time
 import csv
 import numpy as np
 from pathlib import Path
-import stereo_determine_pose
-import single_determine_pose
+if __package__:
+    from . import stereo_determine_pose
+    from . import single_determine_pose
+else:
+    import stereo_determine_pose
+    import single_determine_pose
 
 
 # --------------------------------------------------

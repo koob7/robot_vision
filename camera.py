@@ -1,6 +1,9 @@
 from turtle import position
 
-import config
+if __package__:
+    from . import config
+else:
+    import config
 import cv2
 import enum
 import numpy as np
@@ -36,6 +39,7 @@ class Camera:
         self.camera_dir = f"{base_dir}\\{config.calib_results_path}\\{self.position.value}\\{self.camera_name}_{self.width}_{self.height}px"
         self.photo_dir = f"{base_dir}\\{config.calib_images_path}\\{self.position.value}\\{self.camera_name}_{self.width}_{self.height}px\\{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
         
+        
         if camera_name not in config.camera_names:
             print(f"Nieznana kamera: {camera_name}")
             return
@@ -46,6 +50,9 @@ class Camera:
             if name == config.camera_names[camera_name]:
                 self.camera_id = i
                 break
+        if self.camera_id is None:
+            print(f"Nie można znaleźć kamery: {camera_name}")
+            return
 
         if self.camera_id is None:
             print(f"Nie można znaleźć kamery: {camera_name}")
@@ -115,13 +122,14 @@ class Camera:
 
         self.frame = self.get_dummy_frame()
         return self.frame
- 
-    def release(self):
+    
+    def disconnect(self):
         if self.camera_ready:
             self.cap.release()
+            self.camera_ready = False
 
     def __del__(self):
-        self.release()
+        self.disconnect()
 
     def display_frame(self):
         scale = self.display_width/self.width

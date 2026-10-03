@@ -1,4 +1,7 @@
-import config
+if __package__:
+    from . import config
+else:
+    import config
 import cv2
 import numpy as np
 from pathlib import Path

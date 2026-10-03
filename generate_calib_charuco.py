@@ -5,7 +5,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 
-import config
+if __package__:
+    from . import config
+else:
+    import config
 
 # --- PARAMETRY PLANSZY ---
 columnsX = config.columnsX
