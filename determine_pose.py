@@ -7,9 +7,10 @@ class determine_pose:
 
     def get_mean(self, number):
         detected_markers = {}
+        last_frames = None
 
         for i in range(number):
-            markers = self.find_markers()
+            markers, last_frames = self.find_markers()
 
             if markers is None:
                 continue
@@ -54,4 +55,4 @@ class determine_pose:
 
             data["mean_R"] = R_mean
 
-        return detected_markers
+        return detected_markers, last_frames

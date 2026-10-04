@@ -56,7 +56,7 @@ class single_determine_pose(determine_pose.determine_pose):
         frame = self.camera.get_frame()
         if frame is None:
             print("Nie można pobrać klatki z kamery.")
-            return None
+            return None, None
         
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         inv_gray = cv2.bitwise_not(gray)
@@ -74,9 +74,7 @@ class single_determine_pose(determine_pose.determine_pose):
 
         if ids is None:
             scaled_frame = cv2.resize(frame, None, fx=self.scale_factor, fy=self.scale_factor)
-            cv2.imshow(self.name, scaled_frame)
-            cv2.waitKey(1)
-            return None
+            return None, scaled_frame
 
         found_markers = {}
 
@@ -101,6 +99,4 @@ class single_determine_pose(determine_pose.determine_pose):
             }
 
         scaled_frame = cv2.resize(frame, None, fx=self.scale_factor, fy=self.scale_factor)
-        cv2.imshow(self.name, scaled_frame)
-        cv2.waitKey(1)
-        return found_markers
+        return found_markers, scaled_frame

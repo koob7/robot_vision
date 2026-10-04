@@ -76,7 +76,7 @@ class stereo_determine_pose(determine_pose.determine_pose):
         frame_right = self.camera_right.get_frame()
         if frame_left is None or frame_right is None:
             print("Nie można pobrać klatki z kamery.")
-            return None
+            return None, (frame_left, frame_right)
         
         gray_left = cv2.cvtColor(frame_left, cv2.COLOR_BGR2GRAY)
         inv_gray_left = cv2.bitwise_not(gray_left)
@@ -97,7 +97,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
             )
 
         if ids_left is None or ids_right is None: 
-            return None
+            frame_left_resized = cv2.resize(frame_left, None, fx=self.scale_factor, fy=self.scale_factor)
+            frame_right_resized = cv2.resize(frame_right, None, fx=self.scale_factor, fy=self.scale_factor)
+            return None, (frame_left_resized, frame_right_resized)
 
         found_markers = {}
 
@@ -106,7 +108,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
         common_ids = set(ids_left_flat) & set(ids_right_flat)
 
         if not common_ids:
-            return None
+            frame_left_resized = cv2.resize(frame_left, None, fx=self.scale_factor, fy=self.scale_factor)
+            frame_right_resized = cv2.resize(frame_right, None, fx=self.scale_factor, fy=self.scale_factor)
+            return None, (frame_left_resized, frame_right_resized)
         
         for marker_id in common_ids:
             left_index = np.where(ids_left_flat == marker_id)[0][0]
@@ -153,9 +157,4 @@ class stereo_determine_pose(determine_pose.determine_pose):
 
         frame_left_resized = cv2.resize(frame_left, None, fx=self.scale_factor, fy=self.scale_factor)
         frame_right_resized = cv2.resize(frame_right, None, fx=self.scale_factor, fy=self.scale_factor)
-
-        cv2.imshow(f"{self.name}_left", frame_left_resized)
-        cv2.imshow(f"{self.name}_right", frame_right_resized)
-        cv2.waitKey(1)
-
-        return found_markers
+        return found_markers, (frame_left_resized, frame_right_resized)
