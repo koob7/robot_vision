@@ -79,16 +79,20 @@ def rotate_to_base(home_T, global_T):
     return  global_T @ home_T.T
 
 
+#uwaga - korekcja w osi X na 99% nie działa w złożeniu rotacji Y-Z
+#uwaga - jak zmienimy rotację markera bazowego to wyniki dla kolejnych markerów przestają mieć sens bo układ współrzędnych się obraca i konwencja obrotów Y-Z traci sens
+#dla markera bazowego sens ma tylko rotacja w okół osi Y
 corrections = {
     # 42: rot_z(np.deg2rad(90)) ,     # QR ID 0 → +90° wokół Z
     # 53: rot_z(np.deg2rad(90)) @ rot_x(np.deg2rad(90)),
     56: rot_z(np.deg2rad(-90)),
+    # 54: rot_y(np.deg2rad(-90)),
 }
 
 #uwaga - kąty podane są w układzie marker_id1 (bazowego)!!!
 #pozycja - podana jest w układzie kamer
 #return x, y, z, pitch, yaw 
-#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - X-Z-Y
+#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - Y-Z-X
 
 #matlab
 # syms phi theta psi real

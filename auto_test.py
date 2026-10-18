@@ -66,7 +66,7 @@ def calculate_angles(markers):
 
 
 def get_current_angles():
-    found_markers, frames = determine_pose.find_markers()
+    found_markers, frames = determine_pose.find_markers(default_corrections=False)
     display_frames(frames)
 
     if not found_markers:
@@ -85,7 +85,7 @@ def get_current_angles():
 
 
 def get_mean_angles():
-    mean_markers, frames = determine_pose.get_mean(10)
+    mean_markers, frames = determine_pose.get_mean(10, default_corrections=False)
     display_frames(frames)
 
     if not mean_markers:
@@ -114,7 +114,7 @@ positions2 = list(range(-40, 40))
 previus_i = 0
 previus_j = 0
 
-_, frames = determine_pose.find_markers()
+_, frames = determine_pose.find_markers(default_corrections=False)
 display_frames(frames)
 print(f"oczekiwanie na kamerę {determine_pose.get_name()}...")
 time.sleep(10)

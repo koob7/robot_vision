@@ -11,7 +11,8 @@ else:
 import numpy as np
 import time
 
-determine_pose = single_determine_pose.single_determine_pose("mx_brio_for_business")
+# determine_pose = single_determine_pose.single_determine_pose("mx_brio_for_business")
+determine_pose = stereo_determine_pose.stereo_determine_pose("mx_brio_for_business", "mx_brio")
 
 def display_frames(frames):
     if frames is None:
@@ -27,10 +28,12 @@ def display_frames(frames):
 
 
 while True:
-    found_markers, frames = determine_pose.find_markers()
+    found_markers, frames = determine_pose.find_markers(True)
     display_frames(frames)
 
     if found_markers:
+        # for marker_id, marker_pose in found_markers.items():
+        #     print(f"Marker {marker_id}")
         pose = vision_helper.get_marker_mutal_pose(found_markers, pairs=[(54, 56)])
         if pose is not None:
             pose_53_50 = pose.get((54, 56))
@@ -39,14 +42,14 @@ while True:
                 print(text)
                 # time.sleep(0.5)
     
-    mean_markers, frames = determine_pose.get_mean(10)
-    display_frames(frames)
-    if mean_markers:
-        pose = vision_helper.get_marker_mutal_pose(mean_markers, pairs=[(53, 50)])
-        if pose is not None:
-            pose_53_50 = pose.get((53, 50))
-            if pose_53_50 is not None:
-                text = f"Mean R_diff y:{pose_53_50[3]:.2f}° z:{pose_53_50[4]:.2f}°"
-                print(text)
-                # time.sleep(0.5)
+    # mean_markers, frames = determine_pose.get_mean(10, default_corrections=False)
+    # display_frames(frames)
+    # if mean_markers:
+    #     pose = vision_helper.get_marker_mutal_pose(mean_markers, pairs=[(53, 50)])
+    #     if pose is not None:
+    #         pose_53_50 = pose.get((53, 50))
+    #         if pose_53_50 is not None:
+    #             text = f"Mean R_diff y:{pose_53_50[3]:.2f}° z:{pose_53_50[4]:.2f}°"
+    #             print(text)
+    #             # time.sleep(0.5)
 

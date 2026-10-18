@@ -52,7 +52,7 @@ class single_determine_pose(determine_pose.determine_pose):
     def get_name(self):
         return f"{self.camera.get_name()}"
 
-    def find_markers(self):
+    def find_markers(self, default_corrections):
         frame = self.camera.get_frame()
         if frame is None:
             print("Nie można pobrać klatki z kamery.")
@@ -92,6 +92,9 @@ class single_determine_pose(determine_pose.determine_pose):
             qr_tvec = tvecs[i]
             qr_id = ids[i][0]
             qr_R = cv2.Rodrigues(qr_rvec)
+
+            if (default_corrections):
+                qr_R[0] = vision_helper.get_default_correction(qr_id, qr_R[0])
 
             found_markers[qr_id] = {
                 "qr_tvec": qr_tvec,

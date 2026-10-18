@@ -2,15 +2,15 @@ import numpy as np
 
 class determine_pose:
 
-    def find_markers(self):
+    def find_markers(self, default_corrections):
         raise NotImplementedError("Implement find_markers()")
 
-    def get_mean(self, number):
+    def get_mean(self, number, default_corrections):
         detected_markers = {}
         last_frames = None
 
         for i in range(number):
-            markers, last_frames = self.find_markers()
+            markers, last_frames = self.find_markers(default_corrections=default_corrections)
 
             if markers is None:
                 continue

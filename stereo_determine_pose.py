@@ -71,7 +71,7 @@ class stereo_determine_pose(determine_pose.determine_pose):
     def __del__(self):
         self.disconnect()
 
-    def find_markers(self):
+    def find_markers(self, default_corrections):
         frame_left = self.camera.get_frame()
         frame_right = self.camera_right.get_frame()
         if frame_left is None or frame_right is None:
@@ -146,6 +146,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
             y_axis = np.cross(z_axis, x_axis)
 
             R_marker = np.column_stack((x_axis, y_axis, z_axis))
+
+            if (default_corrections):
+                R_marker[0] = vision_helper.get_default_correction(marker_id, R_marker[0])
             
             cv2.aruco.drawDetectedMarkers(frame_left, [corners_left[left_index]])
             cv2.aruco.drawDetectedMarkers(frame_right, [corners_right[right_index]])
