@@ -28,7 +28,7 @@ def display_frames(frames):
 
 
 while True:
-    found_markers, frames = determine_pose.find_markers(True)
+    found_markers, frames = determine_pose.find_markers(default_corrections=False)
     display_frames(frames)
 
     if found_markers:

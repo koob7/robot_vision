@@ -91,10 +91,20 @@ class single_determine_pose(determine_pose.determine_pose):
             qr_rvec = rvecs[i]
             qr_tvec = tvecs[i]
             qr_id = ids[i][0]
-            qr_R = cv2.Rodrigues(qr_rvec)
+            qr_R, _ = cv2.Rodrigues(qr_rvec)
 
-            if (default_corrections):
-                qr_R[0] = vision_helper.get_default_correction(qr_id, qr_R[0])
+            if default_corrections:
+                qr_R = vision_helper.get_default_correction(qr_id, qr_R)
+
+            corrected_rvec, _ = cv2.Rodrigues(qr_R)
+            cv2.drawFrameAxes(
+                frame,
+                self.camera_matrix,
+                self.dist_coeffs,
+                corrected_rvec,
+                qr_tvec.reshape(3, 1),
+                self.marker_length,
+            )
 
             found_markers[qr_id] = {
                 "qr_tvec": qr_tvec,

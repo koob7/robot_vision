@@ -147,8 +147,34 @@ class stereo_determine_pose(determine_pose.determine_pose):
 
             R_marker = np.column_stack((x_axis, y_axis, z_axis))
 
-            if (default_corrections):
-                R_marker[0] = vision_helper.get_default_correction(marker_id, R_marker[0])
+            if default_corrections:
+                R_marker = vision_helper.get_default_correction(marker_id, R_marker)
+
+            #X: czerwony
+            #Y: zielony
+            #Z: niebieski
+            center_left = center_3d.reshape(3, 1)
+            rvec_left, _ = cv2.Rodrigues(R_marker)
+            cv2.drawFrameAxes(
+                frame_left,
+                self.camera_matrix_left,
+                self.dist_coeffs,
+                rvec_left,
+                center_left,
+                self.marker_length,
+            )
+
+            center_right = self.stereo_R @ center_3d + self.stereo_T.reshape(3)
+            R_marker_right = self.stereo_R @ R_marker
+            rvec_right, _ = cv2.Rodrigues(R_marker_right)
+            cv2.drawFrameAxes(
+                frame_right,
+                self.camera_matrix_right,
+                self.dist_coeffs_right,
+                rvec_right,
+                center_right.reshape(3, 1),
+                self.marker_length,
+            )
             
             cv2.aruco.drawDetectedMarkers(frame_left, [corners_left[left_index]])
             cv2.aruco.drawDetectedMarkers(frame_right, [corners_right[right_index]])
