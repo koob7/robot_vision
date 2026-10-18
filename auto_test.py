@@ -56,7 +56,7 @@ def calculate_angles(markers):
     if markers is None:
         return None
 
-    pose = vision_helper.get_marker_mutal_pose(markers, pairs=[(50, 53)])
+    pose = vision_helper.get_marker_mutal_pose_YZ(markers, pairs=[(50, 53)])
     if pose is None:
         return None
     pose_53_50 = pose.get((50, 53))
@@ -94,8 +94,8 @@ def get_mean_angles():
     if 50 not in mean_markers or 53 not in mean_markers:
         return None
 
-    home_R = mean_markers[53]["mean_R"]
-    target_R = mean_markers[50]["mean_R"]
+    home_R = mean_markers[53]["qr_R"]
+    target_R = mean_markers[50]["qr_R"]
 
     return calculate_angles({
         53: home_R,

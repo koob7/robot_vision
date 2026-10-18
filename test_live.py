@@ -34,7 +34,7 @@ while True:
     if found_markers:
         # for marker_id, marker_pose in found_markers.items():
         #     print(f"Marker {marker_id}")
-        pose = vision_helper.get_marker_mutal_pose(found_markers, pairs=[(54, 56)])
+        pose = vision_helper.get_marker_mutal_pose_YZ(found_markers, pairs=[(54, 56)])
         if pose is not None:
             pose_53_50 = pose.get((54, 56))
             if pose_53_50 is not None:
@@ -45,7 +45,7 @@ while True:
     # mean_markers, frames = determine_pose.get_mean(10, default_corrections=False)
     # display_frames(frames)
     # if mean_markers:
-    #     pose = vision_helper.get_marker_mutal_pose(mean_markers, pairs=[(53, 50)])
+    #     pose = vision_helper.get_marker_mutal_pose_YZ(mean_markers, pairs=[(53, 50)])
     #     if pose is not None:
     #         pose_53_50 = pose.get((53, 50))
     #         if pose_53_50 is not None:

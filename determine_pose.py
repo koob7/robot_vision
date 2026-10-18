@@ -35,7 +35,7 @@ class determine_pose:
         for marker_id, data in detected_markers.items():
 
             # średnia translacji
-            data["mean_tvec"] = np.mean(
+            data["qr_tvec"] = np.mean(
                 data["qr_tvec"],
                 axis=0
             )
@@ -53,6 +53,6 @@ class determine_pose:
                 U[:, -1] *= -1
                 R_mean = U @ Vt
 
-            data["mean_R"] = R_mean
+            data["qr_R"] = R_mean
 
         return detected_markers, last_frames

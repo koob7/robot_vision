@@ -122,7 +122,7 @@ corrections = {
 
 #uwaga   - kąty  podane są w układzie marker_id1 (bazowego)!!!
 #pozycja - podana jest w układzie kamer
-def get_marker_mutal_pose(found_markers, pairs):
+def get_marker_mutal_pose_YZ(found_markers, pairs):
     mutual_poses = {}
 
     for marker_id1, marker_id2 in pairs:
@@ -145,8 +145,8 @@ def get_marker_mutal_pose(found_markers, pairs):
         theta_y_deg = np.degrees(theta_y)
         theta_z_deg = np.degrees(theta_z)
 
-        # text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
-        # print(text)
+        text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
+        print(text)
 
         mutual_poses[(marker_id1, marker_id2)] = (
             T_mutual[0],

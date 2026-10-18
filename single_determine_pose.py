@@ -108,7 +108,7 @@ class single_determine_pose(determine_pose.determine_pose):
 
             found_markers[qr_id] = {
                 "qr_tvec": qr_tvec,
-                "qr_R": qr_R[0]
+                "qr_R": qr_R
             }
 
         scaled_frame = cv2.resize(frame, None, fx=self.scale_factor, fy=self.scale_factor)
