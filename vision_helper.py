@@ -84,3 +84,72 @@ corrections = {
     # 53: rot_z(np.deg2rad(90)) @ rot_x(np.deg2rad(90)),
     56: rot_z(np.deg2rad(-90)),
 }
+
+#uwaga - kąty podane są w układzie marker_id1 (bazowego)!!!
+#pozycja - podana jest w układzie kamer
+#return x, y, z, pitch, yaw 
+#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - X-Z-Y
+
+#matlab
+# syms phi theta psi real
+
+# Ry = @(a)[ cos(a)   0   sin(a);
+#            0        1      0;
+#           -sin(a)   0   cos(a) ];
+
+# Rz = @(a)[ cos(a) -sin(a) 0;
+#            sin(a)  cos(a) 0;
+#            0       0      1 ];
+
+# Rx = @(a)[ 1 0 0;
+#            0 cos(a) -sin(a);
+#            0 sin(a)  cos(a) ];
+
+# R = Ry(phi) * Rz(theta)
+# R = Ry(phi) * Rz(theta)*Rx(0)
+# R2 =  Rz(theta) * Ry(phi);
+# R3 = Ry(phi) * Rz(theta) * Rx(psi);
+
+#output
+# R = 
+# [ cos(phi)*cos(theta), -cos(phi)*sin(theta), sin(phi)]
+# [          sin(theta),           cos(theta),        0]
+# [-cos(theta)*sin(phi),  sin(phi)*sin(theta), cos(phi)]
+
+#uwaga   - kąty  podane są w układzie marker_id1 (bazowego)!!!
+#pozycja - podana jest w układzie kamer
+def get_marker_mutal_pose(found_markers, pairs):
+    mutual_poses = {}
+
+    for marker_id1, marker_id2 in pairs:
+        if marker_id1 not in found_markers or marker_id2 not in found_markers:
+            mutual_poses[(marker_id1, marker_id2)] = None
+            continue
+
+        home_R = found_markers[marker_id1]["qr_R"]
+        home_tvec = found_markers[marker_id1]["qr_tvec"].reshape(3)
+
+        target_R = found_markers[marker_id2]["qr_R"]
+        target_tvec = found_markers[marker_id2]["qr_tvec"].reshape(3)
+
+        R_mutual = home_R.T @ target_R
+        T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
+        # T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
+
+        theta_y = np.arctan2(R_mutual[0,2], R_mutual[2,2])
+        theta_z = np.arctan2(R_mutual[1,0], R_mutual[1,1])
+        theta_y_deg = np.degrees(theta_y)
+        theta_z_deg = np.degrees(theta_z)
+
+        # text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
+        # print(text)
+
+        mutual_poses[(marker_id1, marker_id2)] = (
+            T_mutual[0],
+            T_mutual[1],
+            T_mutual[2],
+            theta_y_deg,
+            theta_z_deg,
+        )
+
+    return mutual_poses

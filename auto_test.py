@@ -4,12 +4,15 @@ import csv
 import cv2
 import numpy as np
 from pathlib import Path
+
 if __package__:
     from . import stereo_determine_pose
     from . import single_determine_pose
+    from . import vision_helper
 else:
     import stereo_determine_pose
     import single_determine_pose
+    import vision_helper
 
 
 # --------------------------------------------------
@@ -53,21 +56,13 @@ def calculate_angles(markers):
     if markers is None:
         return None
 
-    if 50 not in markers or 53 not in markers:
+    pose = vision_helper.get_marker_mutal_pose(markers, pairs=[(50, 53)])
+    if pose is None:
         return None
-
-    home_R = markers[53]
-    target_R = markers[50]
-
-    R_diff = home_R.T @ target_R
-
-    theta_y = np.arctan2(R_diff[0, 2], R_diff[2, 2])
-    theta_z = np.arctan2(R_diff[1, 0], R_diff[1, 1])
-
-    return (
-        np.degrees(theta_y),
-        np.degrees(theta_z)
-    )
+    pose_53_50 = pose.get((50, 53))
+    if pose_53_50 is None:
+        return None
+    return pose_53_50[3], pose_53_50[4]
 
 
 def get_current_angles():
