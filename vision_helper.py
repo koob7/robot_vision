@@ -32,6 +32,9 @@ def get_camera_name (camera_name):
 import numpy as np
 import cv2
 
+import numpy as np
+from scipy.spatial.transform import Rotation as Rot
+
 def draw_camera_axes_ui(img):
     h, w = img.shape[:2]
 
@@ -85,14 +88,14 @@ def rotate_to_base(home_T, global_T):
 corrections = {
     # 42: rot_z(np.deg2rad(90)) ,     # QR ID 0 → +90° wokół Z
     # 53: rot_z(np.deg2rad(90)) @ rot_x(np.deg2rad(90)),
-    56: rot_z(np.deg2rad(-90)),
-    54: rot_z(np.deg2rad(-90)),
+    # 56: rot_z(np.deg2rad(-90)),
+    54: rot_x(np.deg2rad(-90)),
 }
 
 #uwaga - kąty podane są w układzie marker_id1 (bazowego)!!!
 #pozycja - podana jest w układzie kamer
 #return x, y, z, pitch, yaw 
-#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - Y-Z-X
+#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - Y-Z-X (or x-y-z)
 
 #matlab
 # syms phi theta psi real
@@ -154,6 +157,40 @@ def get_marker_mutal_pose_YZ(found_markers, pairs):
             T_mutual[2],
             theta_y_deg,
             theta_z_deg,
+        )
+
+    return mutual_poses
+
+def get_marker_mutal_pose_XYZ(found_markers, pairs):
+    mutual_poses = {}
+
+    for marker_id1, marker_id2 in pairs:
+        if marker_id1 not in found_markers or marker_id2 not in found_markers:
+            mutual_poses[(marker_id1, marker_id2)] = None
+            continue
+
+        home_R = found_markers[marker_id1]["qr_R"]
+        home_tvec = found_markers[marker_id1]["qr_tvec"].reshape(3)
+
+        target_R = found_markers[marker_id2]["qr_R"]
+        target_tvec = found_markers[marker_id2]["qr_tvec"].reshape(3)
+
+        R_mutual = home_R.T @ target_R
+        T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
+        # T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
+
+        angles = Rot.from_matrix(R_mutual).as_euler('xyz')
+
+        text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual x:{angles[0]:.2f}° y:{angles[1]:.2f}° z:{angles[2]:.2f}°"
+        print(text)
+
+        mutual_poses[(marker_id1, marker_id2)] = (
+            T_mutual[0],
+            T_mutual[1],
+            T_mutual[2],
+            np.degrees(angles[0]),
+            np.degrees(angles[1]),
+            np.degrees(angles[2]),
         )
 
     return mutual_poses
