@@ -22,8 +22,8 @@ class position(enum.Enum):
 class Camera:
     def __init__(self, camera_name: str, width: int, height: int, position: position):
 
-        self.display_width = 680
-        self.display_height = 480
+        self.display_width = 680*2
+        self.display_height = 480*2
         self.frame = self.get_dummy_frame()
 
         if None in [camera_name, width, height, position]:

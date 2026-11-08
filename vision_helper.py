@@ -86,10 +86,19 @@ def rotate_to_base(home_T, global_T):
 #uwaga - jak zmienimy rotację markera bazowego to wyniki dla kolejnych markerów przestają mieć sens bo układ współrzędnych się obraca i konwencja obrotów Y-Z traci sens
 #dla markera bazowego sens ma tylko rotacja w osi w głąb markara czyli w okół osi Z - czy to się zmienia?
 corrections = {
+
+    # Z - niebieski
+    # Y - zielony
+    # X - czerwony
     # 42: rot_z(np.deg2rad(90)) ,     # QR ID 0 → +90° wokół Z
     # 53: rot_z(np.deg2rad(90)) @ rot_x(np.deg2rad(90)),
-    56: rot_y(np.deg2rad(-90)),
-    54: rot_x(np.deg2rad(-90)),
+    # 56: rot_y(np.deg2rad(-90)),
+    # 54: rot_x(np.deg2rad(-90)),
+    59: rot_y(np.deg2rad(-90)) @ rot_z(np.deg2rad(-90)),
+    # 62: rot_x(np.deg2rad(-90)), - jest dobrze naklejony
+    60: rot_z(np.deg2rad(90)) @ rot_y(np.deg2rad(90)),
+    63: rot_x(np.deg2rad(-90)) @ rot_y(np.deg2rad(90)),
+    58: rot_z(np.deg2rad(180)) @ rot_y(np.deg2rad(-90)),
 }
 
 #uwaga - kąty podane są w układzie marker_id1 (bazowego)!!!
