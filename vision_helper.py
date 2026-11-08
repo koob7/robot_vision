@@ -1,4 +1,6 @@
 import re
+import cv2
+import numpy as np
 
 def rotation_in_base (R_marker, R_base):
     return R_base.T @ R_marker
@@ -28,11 +30,85 @@ def get_camera_name (camera_name):
     name = name[:-1]
     return name
 
+def calculate_marker_quality(corners, image_shape, camera_matrix=None,
+                             dist_coeffs=None, rvec=None, tvec=None,
+                             marker_length=None):
+    """Return a 0..1 quality score and diagnostics for one detected marker."""
+    points = np.asarray(corners, dtype=np.float32).reshape(4, 2)
+    sides = np.linalg.norm(np.roll(points, -1, axis=0) - points, axis=1)
+    perimeter = float(np.sum(sides))
+    area = float(cv2.contourArea(points))
 
-import numpy as np
-import cv2
+    if perimeter <= 0 or area <= 0:
+        return {
+            "quality_score": 0.0,
+            "reprojection_error": None,
+            "area_px": area,
+            "side_length_px": 0.0,
+        }
 
-import numpy as np
+    side_mean = float(np.mean(sides))
+    side_variation = float(np.std(sides) / side_mean) if side_mean else 1.0
+    shape_score = float(np.clip(1.0 - 2.0 * side_variation, 0.0, 1.0))
+
+    image_area = float(image_shape[0] * image_shape[1])
+    area_score = float(np.clip(area / (0.05 * image_area), 0.0, 1.0))
+
+    reprojection_error = None
+    reprojection_score = 1.0
+    if (camera_matrix is not None and dist_coeffs is not None
+            and rvec is not None and tvec is not None
+            and marker_length is not None):
+        half_length = marker_length / 2.0
+        object_points = np.array([
+            [-half_length, half_length, 0],
+            [half_length, half_length, 0],
+            [half_length, -half_length, 0],
+            [-half_length, -half_length, 0],
+        ], dtype=np.float32)
+        projected, _ = cv2.projectPoints(
+            object_points, rvec, tvec, camera_matrix, dist_coeffs
+        )
+        reprojection_error = float(np.mean(np.linalg.norm(
+            projected.reshape(4, 2) - points, axis=1
+        )))
+        reprojection_score = float(np.exp(
+            -reprojection_error / max(side_mean * 0.05, 1e-6)
+        ))
+
+    quality_score = float(np.clip(
+        0.45 * reprojection_score + 0.35 * area_score + 0.20 * shape_score,
+        0.0,
+        1.0,
+    ))
+    return {
+        "quality_score": quality_score,
+        "reprojection_error": reprojection_error,
+        "area_px": area,
+        "side_length_px": side_mean,
+    }
+
+def get_best_marker(found_markers, marker_ids):
+    """Return the highest-quality marker from marker_ids, or None."""
+    if not found_markers:
+        return None
+
+    candidates = [
+        marker for marker_id, marker in found_markers.items()
+        if marker_id in marker_ids and marker.get("quality_score") is not None
+    ]
+    if not candidates:
+        return None
+
+    return max(
+        candidates,
+        key=lambda marker: (
+            marker["quality_score"],
+            marker.get("area_px", 0.0),
+        ),
+    )
+
+
 from scipy.spatial.transform import Rotation as Rot
 
 def draw_camera_axes_ui(img):

@@ -93,6 +93,15 @@ class single_determine_pose(determine_pose.determine_pose):
             qr_tvec = tvecs[i]
             qr_id = ids[i][0]
             qr_R, _ = cv2.Rodrigues(qr_rvec)
+            quality = vision_helper.calculate_marker_quality(
+                corners[i],
+                frame.shape,
+                self.camera_matrix,
+                self.dist_coeffs,
+                qr_rvec,
+                qr_tvec,
+                self.marker_length,
+            )
 
             if default_corrections:
                 qr_R = vision_helper.get_default_correction(qr_id, qr_R)
@@ -109,7 +118,9 @@ class single_determine_pose(determine_pose.determine_pose):
 
             found_markers[qr_id] = {
                 "qr_tvec": qr_tvec,
-                "qr_R": qr_R
+                "qr_R": qr_R,
+                "qr_id": qr_id,
+                **quality,
             }
 
         scaled_frame = cv2.resize(frame, None, fx=self.scale_factor, fy=self.scale_factor)

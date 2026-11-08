@@ -148,6 +148,16 @@ class stereo_determine_pose(determine_pose.determine_pose):
             y_axis = np.cross(z_axis, x_axis)
 
             R_marker = np.column_stack((x_axis, y_axis, z_axis))
+            quality_rvec, _ = cv2.Rodrigues(R_marker)
+            quality = vision_helper.calculate_marker_quality(
+                left_corners,
+                frame_left.shape,
+                self.camera_matrix_left,
+                self.dist_coeffs,
+                quality_rvec,
+                center_3d.reshape(3, 1),
+                self.marker_length,
+            )
 
             if default_corrections:
                 R_marker = vision_helper.get_default_correction(marker_id, R_marker)
@@ -183,7 +193,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
 
             found_markers[marker_id] = {
                 "qr_tvec": center_3d,
-                "qr_R": R_marker
+                "qr_R": R_marker,
+                "qr_id": int(marker_id),
+                **quality,
             }
 
         frame_left_resized = cv2.resize(frame_left, None, fx=self.scale_factor, fy=self.scale_factor)
