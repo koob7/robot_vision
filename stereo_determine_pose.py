@@ -137,7 +137,9 @@ class stereo_determine_pose(determine_pose.determine_pose):
             x_axis = p1 - p0
             x_axis /= np.linalg.norm(x_axis)
 
-            y_axis = p3 - p0
+            # Match estimatePoseSingleMarkers: corners are top-left, top-right,
+            # bottom-right, bottom-left; marker +Y points up and +Z out of it.
+            y_axis = p0 - p3
             y_axis /= np.linalg.norm(y_axis)
 
             z_axis = np.cross(x_axis, y_axis)

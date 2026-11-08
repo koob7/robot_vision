@@ -88,14 +88,14 @@ def rotate_to_base(home_T, global_T):
 corrections = {
     # 42: rot_z(np.deg2rad(90)) ,     # QR ID 0 → +90° wokół Z
     # 53: rot_z(np.deg2rad(90)) @ rot_x(np.deg2rad(90)),
-    # 56: rot_z(np.deg2rad(-90)),
+    56: rot_y(np.deg2rad(-90)),
     54: rot_x(np.deg2rad(-90)),
 }
 
 #uwaga - kąty podane są w układzie marker_id1 (bazowego)!!!
 #pozycja - podana jest w układzie kamer
 #return x, y, z, pitch, yaw 
-#equations taken from matrix got by multyplying rotation matrix Y by Z (by X(0)) - Y-Z-X (or x-y-z)
+#equations taken from matrix got by multyplying rotation matrix (X(0)) * Y * Z
 
 #matlab
 # syms phi theta psi real
@@ -140,8 +140,8 @@ def get_marker_mutal_pose_YZ(found_markers, pairs):
         target_tvec = found_markers[marker_id2]["qr_tvec"].reshape(3)
 
         R_mutual = home_R.T @ target_R
-        T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
-        # T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
+        # T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
+        T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
 
         theta_y = np.arctan2(R_mutual[0,2], R_mutual[2,2])
         theta_z = np.arctan2(R_mutual[1,0], R_mutual[1,1])
@@ -149,7 +149,7 @@ def get_marker_mutal_pose_YZ(found_markers, pairs):
         theta_z_deg = np.degrees(theta_z)
 
         text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual y:{theta_y_deg:.2f}° z:{theta_z_deg:.2f}°"
-        print(text)
+        # print(text)
 
         mutual_poses[(marker_id1, marker_id2)] = (
             T_mutual[0],
@@ -176,13 +176,13 @@ def get_marker_mutal_pose_XYZ(found_markers, pairs):
         target_tvec = found_markers[marker_id2]["qr_tvec"].reshape(3)
 
         R_mutual = home_R.T @ target_R
-        T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
-        # T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
+        # T_mutual = target_tvec - home_tvec                # pozycja w układzie kamer
+        T_mutual = home_R.T @ (target_tvec - home_tvec) # pozycja w układzie markera_id1
 
         angles = Rot.from_matrix(R_mutual).as_euler('xyz')
 
         text = f"T_mutual x {T_mutual[0]:.2f} y {T_mutual[1]:.2f} z {T_mutual[2]:.2f} | R_mutual x:{angles[0]:.2f}° y:{angles[1]:.2f}° z:{angles[2]:.2f}°"
-        print(text)
+        # print(text)
 
         mutual_poses[(marker_id1, marker_id2)] = (
             T_mutual[0],

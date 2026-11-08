@@ -36,7 +36,7 @@ class single_determine_pose(determine_pose.determine_pose):
         self.criteria = (
             cv2.TERM_CRITERIA_EPS +
             cv2.TERM_CRITERIA_MAX_ITER,
-            30,
+            300,
             0.001
         )
 
@@ -51,6 +51,7 @@ class single_determine_pose(determine_pose.determine_pose):
     
     def get_name(self):
         return f"{self.camera.get_name()}"
+    
 
     def find_markers(self, default_corrections):
         frame = self.camera.get_frame()
